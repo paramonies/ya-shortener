@@ -8,6 +8,7 @@ import (
 )
 
 var DB map[string]string
+var srvAddr = "localhost:8080"
 
 func URLHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -22,6 +23,7 @@ func URLHandler(w http.ResponseWriter, r *http.Request) {
 		//w.Header().Set("content-type", "text/plain")
 		w.Header().Set("Location", DB[id])
 		w.WriteHeader(http.StatusTemporaryRedirect)
+		w.Write([]byte("id found"))
 		//w.WriteHeader(http.StatusOK)
 		//w.Write([]byte(DB[id]))
 	case http.MethodPost:
@@ -36,7 +38,8 @@ func URLHandler(w http.ResponseWriter, r *http.Request) {
 		DB[id] = string(b)
 		w.Header().Set("content-type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(id))
+		shortURL := fmt.Sprintf("https://%s/%s", srvAddr, id)
+		w.Write([]byte(shortURL))
 	default:
 		http.Error(w, "method not found", http.StatusBadRequest)
 		return
@@ -46,5 +49,5 @@ func URLHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	DB = make(map[string]string)
 	http.HandleFunc("/", URLHandler)
-	http.ListenAndServe("localhost:8080", nil)
+	http.ListenAndServe(srvAddr, nil)
 }
