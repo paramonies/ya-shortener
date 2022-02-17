@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/google/uuid"
+	"hash/fnv"
 	"io"
 	"net/http"
 	"strings"
@@ -30,18 +30,23 @@ func URLHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		fmt.Println(string(b))
-		id := uuid.New().String()[:8]
-		fmt.Println(id)
-		DB[id] = string(b)
+
+		id := hash(string(b))
+		DB[fmt.Sprintf("%d", id)] = string(b)
 		w.Header().Set("content-type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
-		shortURL := fmt.Sprintf("https://%s/%s", srvAddr, id)
+		shortURL := fmt.Sprintf("https://%s/%d", srvAddr, id)
 		w.Write([]byte(shortURL))
 	default:
 		http.Error(w, "method not found", http.StatusBadRequest)
 		return
 	}
+}
+
+func hash(s string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return h.Sum32()
 }
 
 func main() {
