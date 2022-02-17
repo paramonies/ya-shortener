@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"io"
 	"net/http"
+	"strings"
 )
 
 var DB map[string]string
@@ -13,19 +14,16 @@ var srvAddr = "localhost:8080"
 func URLHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		strID := r.URL.Path
-		fmt.Println(strID[1:])
-		id := strID[1:]
+		path := r.URL.Path
+		id := strings.Split(path, "/")[1]
+		fmt.Println(id)
 		if _, ok := DB[id]; !ok {
 			http.Error(w, "id not found", http.StatusBadRequest)
 			return
 		}
-		//w.Header().Set("content-type", "text/plain")
-		w.Header().Set("Location", DB[id])
 		w.WriteHeader(http.StatusTemporaryRedirect)
+		w.Header().Set("Location", DB[id])
 		w.Write([]byte("id found"))
-		//w.WriteHeader(http.StatusOK)
-		//w.Write([]byte(DB[id]))
 	case http.MethodPost:
 		b, err := io.ReadAll(r.Body)
 		if err != nil {
