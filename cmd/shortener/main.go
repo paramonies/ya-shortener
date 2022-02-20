@@ -21,9 +21,9 @@ func URLHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "id not found", http.StatusBadRequest)
 			return
 		}
-		w.Header().Set("Location", DB[id])
 		w.WriteHeader(http.StatusTemporaryRedirect)
-		w.Header().Set("Content-type", "text/plain; charset=utf-8")
+		w.Header().Set("Location", DB[id])
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Write([]byte("id found"))
 	case http.MethodPost:
 		b, err := io.ReadAll(r.Body)
