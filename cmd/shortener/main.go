@@ -44,9 +44,9 @@ func CreateShortURLHadler(rep Repository) http.HandlerFunc {
 		id := hash(urlStr)
 		rep.Set(fmt.Sprintf("%d", id), urlStr)
 
-		w.Header().Set("Content-type", "text/plain; charset=utf-8")
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusCreated)
-		shortURL := fmt.Sprintf("https://%s/%d", srvAddr, id)
+		shortURL := fmt.Sprintf("http://%s/%d", srvAddr, id)
 		w.Write([]byte(shortURL))
 	}
 }
@@ -92,8 +92,9 @@ func (db *DB) Set(key, val string) {
 }
 
 func (db *DB) Get(key string) (string, error) {
-	if _, ok := db.mapDB[key]; !ok {
+	val, ok := db.mapDB[key]
+	if !ok {
 		return "", fmt.Errorf("key %s not found in database", key)
 	}
-	return db.mapDB[key], nil
+	return val, nil
 }

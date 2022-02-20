@@ -32,7 +32,7 @@ func TestMux(t *testing.T) {
 			path:   "/",
 			want: want{
 				status: http.StatusCreated,
-				body:   fmt.Sprintf("https://localhost:8080/%d", hash("https://practicum.yandex.ru")),
+				body:   fmt.Sprintf("http://localhost:8080/%d", hash("https://practicum.yandex.ru")),
 			},
 		},
 		{
