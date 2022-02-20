@@ -43,9 +43,9 @@ func URLHandler(w http.ResponseWriter, r *http.Request) {
 		id := hash(string(b))
 		DB[fmt.Sprintf("%d", id)] = urlStr
 
-		w.Header().Set("Content-type", "text/plain; charset=utf-8")
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusCreated)
-		shortURL := fmt.Sprintf("https://%s/%d", srvAddr, id)
+		shortURL := fmt.Sprintf("http://%s/%d", srvAddr, id)
 		w.Write([]byte(shortURL))
 	default:
 		http.Error(w, "method not found", http.StatusBadRequest)
