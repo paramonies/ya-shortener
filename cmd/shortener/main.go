@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	"hash/fnv"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
+
+	"github.com/go-chi/chi/v5"
 )
 
 var srvAddr = "localhost:8080"
