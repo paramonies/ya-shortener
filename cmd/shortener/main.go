@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"hash/fnv"
 	"io"
@@ -21,6 +22,7 @@ func NewRouter() *chi.Mux {
 	r := chi.NewRouter()
 	db := NewDB()
 	r.Post("/", CreateShortURLHadler(db))
+	r.Post("/api/shorten", CreateShortURLFromJSONHandler(db))
 	r.Get("/{ID}", GetURLByIDHandler(db))
 	return r
 }
@@ -49,6 +51,56 @@ func CreateShortURLHadler(rep Repository) http.HandlerFunc {
 		w.WriteHeader(http.StatusCreated)
 		shortURL := fmt.Sprintf("http://%s/%d", srvAddr, id)
 		w.Write([]byte(shortURL))
+	}
+}
+
+func CreateShortURLFromJSONHandler(rep Repository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b, err := io.ReadAll(r.Body)
+		defer r.Body.Close()
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var reqBodyJSON struct {
+			URL string `json:"url"`
+		}
+
+		err = json.Unmarshal(b, &reqBodyJSON)
+		if err != nil {
+			http.Error(w, "id not found", http.StatusBadRequest)
+			return
+		}
+		URL := reqBodyJSON.URL
+
+		_, err = url.ParseRequestURI(URL)
+		if err != nil {
+			http.Error(w, "id not found", http.StatusBadRequest)
+			return
+		}
+
+		id := hash(URL)
+		rep.Set(fmt.Sprintf("%d", id), URL)
+
+		shortURL := fmt.Sprintf("http://%s/%d", srvAddr, id)
+
+		resBodyJSON := struct {
+			Result string `json:"result"`
+		}{
+			Result: shortURL,
+		}
+
+		resBody, err := json.Marshal(resBodyJSON)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusCreated)
+		w.Write(resBody)
 	}
 }
 

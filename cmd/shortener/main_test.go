@@ -62,6 +62,26 @@ func TestMux(t *testing.T) {
 				body:   "id not found\n",
 			},
 		},
+		{
+			name:   "POST JSON OK",
+			body:   `{"url":"https://practicum.yandex.ru"}`,
+			method: http.MethodPost,
+			path:   "/api/shorten",
+			want: want{
+				status: http.StatusCreated,
+				body:   `{"result":"http://localhost:8080/3353207204"}`,
+			},
+		},
+		{
+			name:   "POST JSON BAD REQUEST",
+			body:   `{"url":"https://practicum.yandex.ru"`,
+			method: http.MethodPost,
+			path:   "/api/shorten",
+			want: want{
+				status: http.StatusBadRequest,
+				body:   "id not found\n",
+			},
+		},
 	}
 
 	r := NewRouter()
