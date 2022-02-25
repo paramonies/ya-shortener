@@ -212,7 +212,7 @@ func NewFileDB(path string) (*FileDB, error) {
 	}
 
 	var records []Record
-	json.Unmarshal(data, &records)
+	err = json.Unmarshal(data, &records)
 	if err != nil {
 		return nil, err
 	}
@@ -253,5 +253,6 @@ func (f *FileDB) Get(key string) (string, error) {
 }
 
 func (f *FileDB) Close() error {
-	return f.Close()
+	f.Close()
+	return nil
 }
