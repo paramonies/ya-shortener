@@ -253,6 +253,5 @@ func (f *FileDB) Get(key string) (string, error) {
 }
 
 func (f *FileDB) Close() error {
-	f.Close()
-	return nil
+	return f.DB.Close()
 }
