@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/caarlos0/env/v6"
 	"hash/fnv"
 	"io"
 	"log"
@@ -12,22 +13,33 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-var srvAddr = "localhost:8080"
+//var srvAddr = "localhost:8080"
+//var baseUrl = "http://" + srvAddr + "/"
 
-func main() {
-	log.Fatal(http.ListenAndServe(srvAddr, NewRouter()))
+type Config struct {
+	SrvAddr string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
+	BaseUrl string `env:"BASE_URL" envDefault:"http://localhost:8080/"`
 }
 
-func NewRouter() *chi.Mux {
+func main() {
+	var cfg Config
+	err := env.Parse(&cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(cfg.BaseUrl)))
+}
+
+func NewRouter(baseUrl string) *chi.Mux {
 	r := chi.NewRouter()
 	db := NewDB()
-	r.Post("/", CreateShortURLHadler(db))
-	r.Post("/api/shorten", CreateShortURLFromJSONHandler(db))
+	r.Post("/", CreateShortURLHadler(db, baseUrl))
+	r.Post("/api/shorten", CreateShortURLFromJSONHandler(db, baseUrl))
 	r.Get("/{ID}", GetURLByIDHandler(db))
 	return r
 }
 
-func CreateShortURLHadler(rep Repository) http.HandlerFunc {
+func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
@@ -49,12 +61,12 @@ func CreateShortURLHadler(rep Repository) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusCreated)
-		shortURL := fmt.Sprintf("http://%s/%d", srvAddr, id)
+		shortURL := fmt.Sprintf("%s%d", baseURL, id)
 		w.Write([]byte(shortURL))
 	}
 }
 
-func CreateShortURLFromJSONHandler(rep Repository) http.HandlerFunc {
+func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
@@ -84,7 +96,7 @@ func CreateShortURLFromJSONHandler(rep Repository) http.HandlerFunc {
 		id := hash(URL)
 		rep.Set(fmt.Sprintf("%d", id), URL)
 
-		shortURL := fmt.Sprintf("http://%s/%d", srvAddr, id)
+		shortURL := fmt.Sprintf("%s%d", baseURL, id)
 
 		resBodyJSON := struct {
 			Result string `json:"result"`

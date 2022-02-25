@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/caarlos0/env/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -84,7 +86,13 @@ func TestMux(t *testing.T) {
 		},
 	}
 
-	r := NewRouter()
+	var cfg Config
+	err := env.Parse(&cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	r := NewRouter(cfg.BaseUrl)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
