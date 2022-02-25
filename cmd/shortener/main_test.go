@@ -92,7 +92,7 @@ func TestMux(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	r := NewRouter(cfg.BaseURL)
+	r := NewRouter(NewMapDB(), &cfg)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
