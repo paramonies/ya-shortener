@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/go-chi/chi/v5"
@@ -28,6 +29,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	initFlags(&cfg)
+	flag.Parse()
+
 	var db Repository
 	if cfg.FileStorePath == "" {
 		db = NewMapDB()
@@ -39,6 +44,12 @@ func main() {
 	}
 	defer db.Close()
 	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(db, &cfg)))
+}
+
+func initFlags(cfg *Config) {
+	flag.StringVar(&cfg.SrvAddr, "a", cfg.SrvAddr, "server host and port")
+	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "URL for making http request")
+	flag.StringVar(&cfg.FileStorePath, "f", cfg.FileStorePath, "path to DB-file on disk")
 }
 
 func NewRouter(db Repository, cfg *Config) *chi.Mux {
