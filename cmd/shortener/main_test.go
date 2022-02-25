@@ -92,7 +92,7 @@ func TestMux(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	r := NewRouter(cfg.BaseUrl)
+	r := NewRouter(cfg.BaseURL)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
