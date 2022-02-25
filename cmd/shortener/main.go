@@ -18,7 +18,7 @@ import (
 
 type Config struct {
 	SrvAddr string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
-	BaseUrl string `env:"BASE_URL" envDefault:"http://localhost:8080/"`
+	BaseURL string `env:"BASE_URL" envDefault:"http://localhost:8080/"`
 }
 
 func main() {
@@ -27,14 +27,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(cfg.BaseUrl)))
+	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(cfg.BaseURL)))
 }
 
-func NewRouter(baseUrl string) *chi.Mux {
+func NewRouter(baseURL string) *chi.Mux {
 	r := chi.NewRouter()
 	db := NewDB()
-	r.Post("/", CreateShortURLHadler(db, baseUrl))
-	r.Post("/api/shorten", CreateShortURLFromJSONHandler(db, baseUrl))
+	r.Post("/", CreateShortURLHadler(db, baseURL))
+	r.Post("/api/shorten", CreateShortURLFromJSONHandler(db, baseURL))
 	r.Get("/{ID}", GetURLByIDHandler(db))
 	return r
 }
