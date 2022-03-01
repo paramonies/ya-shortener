@@ -18,7 +18,7 @@ import (
 //var baseUrl = "http://" + srvAddr + "/"
 
 type Config struct {
-	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:":8080"`
+	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:"8080"`
 	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	FileStorePath string
 }
@@ -43,7 +43,7 @@ func main() {
 		}
 	}
 	defer db.Close()
-	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(db, &cfg)))
+	log.Fatal(http.ListenAndServe(":"+cfg.SrvAddr, NewRouter(db, &cfg)))
 }
 
 func initFlags(cfg *Config) {
