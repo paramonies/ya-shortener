@@ -19,7 +19,7 @@ import (
 
 type Config struct {
 	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:":8080"`
-	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080/"`
+	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	FileStorePath string
 }
 
@@ -86,7 +86,7 @@ func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusCreated)
-		shortURL := fmt.Sprintf("%s%d", baseURL, id)
+		shortURL := fmt.Sprintf("%s/%d", baseURL, id)
 		w.Write([]byte(shortURL))
 	}
 }
@@ -121,7 +121,7 @@ func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerF
 		id := hash(URL)
 		rep.Set(fmt.Sprintf("%d", id), URL)
 
-		shortURL := fmt.Sprintf("%s%d", baseURL, id)
+		shortURL := fmt.Sprintf("%s/%d", baseURL, id)
 
 		resBodyJSON := struct {
 			Result string `json:"result"`
