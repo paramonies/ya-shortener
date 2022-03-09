@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 )
 
 //var srvAddr = "localhost:8080"
@@ -200,7 +201,8 @@ type FileDB struct {
 }
 
 func NewFileDB(path string) (*FileDB, error) {
-	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0755)
+	fp := filepath.Join("/tmp", path)
+	file, err := os.OpenFile(fp, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0755)
 	if err != nil {
 		return nil, err
 	}
