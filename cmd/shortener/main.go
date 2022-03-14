@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 )
 
 //var srvAddr = "localhost:8080"
@@ -29,6 +28,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	var db Repository
 	if cfg.FileStorePath == "" {
 		db = NewMapDB()
@@ -201,8 +201,7 @@ type FileDB struct {
 }
 
 func NewFileDB(path string) (*FileDB, error) {
-	fp := filepath.Join("/tmp", path)
-	file, err := os.OpenFile(fp, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0755)
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
 		return nil, err
 	}
