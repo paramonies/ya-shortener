@@ -58,6 +58,7 @@ func NewRouter(db Repository, cfg *Config) *chi.Mux {
 func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 	log.Println("!!! CreateShortURLHadler")
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("!!! CreateShortURLHadler")
 		b, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
 
@@ -89,6 +90,7 @@ func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerFunc {
 	log.Println("!!!CreateShortURLFromJSONHandler")
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("!!!CreateShortURLFromJSONHandler")
 		b, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
 
@@ -140,6 +142,7 @@ func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerF
 func GetURLByIDHandler(rep Repository) http.HandlerFunc {
 	log.Println("!!!GetURLByIDHandler")
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("!!!GetURLByIDHandler")
 		id := chi.URLParam(r, "ID")
 
 		val, err := rep.Get(id)
