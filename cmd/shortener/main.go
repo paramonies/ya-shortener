@@ -15,6 +15,7 @@ import (
 
 //var srvAddr = "localhost:8080"
 //var baseUrl = "http://" + srvAddr + "/"
+//test
 
 type Config struct {
 	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
