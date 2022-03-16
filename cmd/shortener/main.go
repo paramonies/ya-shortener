@@ -41,7 +41,7 @@ func main() {
 	}
 	defer db.Close()
 
-	log.Println("!!! main")
+	log.Println("!!! main !!!")
 	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(db, &cfg)))
 }
 
