@@ -40,10 +40,13 @@ func main() {
 		}
 	}
 	defer db.Close()
+
+	log.Println("!!! main")
 	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(db, &cfg)))
 }
 
 func NewRouter(db Repository, cfg *Config) *chi.Mux {
+	log.Println("!!! NewRouter")
 	r := chi.NewRouter()
 
 	r.Post("/", CreateShortURLHadler(db, cfg.BaseURL))
@@ -53,6 +56,7 @@ func NewRouter(db Repository, cfg *Config) *chi.Mux {
 }
 
 func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
+	log.Println("!!! CreateShortURLHadler")
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
@@ -83,6 +87,7 @@ func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 }
 
 func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerFunc {
+	log.Println("!!!CreateShortURLFromJSONHandler")
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
@@ -133,6 +138,7 @@ func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerF
 }
 
 func GetURLByIDHandler(rep Repository) http.HandlerFunc {
+	log.Println("!!!GetURLByIDHandler")
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "ID")
 
