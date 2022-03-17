@@ -56,7 +56,7 @@ func main() {
 
 func NewRouter(db Repository, cfg *Config) *chi.Mux {
 	r := chi.NewRouter()
-
+	log.Println(0)
 	r.Post("/", CreateShortURLHadler(db, cfg.BaseURL))
 	r.Post("/api/shorten", CreateShortURLFromJSONHandler(db, cfg.BaseURL))
 	r.Get("/{ID}", GetURLByIDHandler(db))
@@ -98,19 +98,20 @@ func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 
 func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println(1)
 		b, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
-
+		log.Println(2)
 		if err != nil {
 			log.Printf("read body %s...\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
+		log.Println(3)
 		var reqBodyJSON struct {
 			URL string `json:"url"`
 		}
-
+		log.Println(4)
 		err = json.Unmarshal(b, &reqBodyJSON)
 		if err != nil {
 			log.Printf("unmarshall body %s...\n", err.Error())
@@ -118,7 +119,7 @@ func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerF
 			return
 		}
 		URL := reqBodyJSON.URL
-
+		log.Println(5)
 		_, err = url.ParseRequestURI(URL)
 		if err != nil {
 			log.Printf("parse url %s...\n", err.Error())
@@ -144,7 +145,7 @@ func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerF
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		w.Write(resBody)
 	}
