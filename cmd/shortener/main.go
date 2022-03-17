@@ -70,6 +70,7 @@ func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 		defer r.Body.Close()
 
 		if err != nil {
+			log.Printf("read body %s...\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -77,6 +78,7 @@ func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 		urlStr := string(b)
 		_, err = url.ParseRequestURI(urlStr)
 		if err != nil {
+			log.Printf("parse url %s...\n", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -84,6 +86,7 @@ func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 		id := hash(urlStr)
 		err = rep.Set(fmt.Sprintf("%d", id), urlStr)
 		if err != nil {
+			log.Printf("rep set %s...\n", err.Error())
 			log.Println(err)
 		}
 
@@ -100,6 +103,7 @@ func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerF
 		defer r.Body.Close()
 
 		if err != nil {
+			log.Printf("read body %s...\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -110,6 +114,7 @@ func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerF
 
 		err = json.Unmarshal(b, &reqBodyJSON)
 		if err != nil {
+			log.Printf("unmarshall body %s...\n", err.Error())
 			http.Error(w, "id not found", http.StatusBadRequest)
 			return
 		}
@@ -117,6 +122,7 @@ func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerF
 
 		_, err = url.ParseRequestURI(URL)
 		if err != nil {
+			log.Printf("parse url %s...\n", err.Error())
 			http.Error(w, "id not found", http.StatusBadRequest)
 			return
 		}
@@ -134,6 +140,7 @@ func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerF
 
 		resBody, err := json.Marshal(resBodyJSON)
 		if err != nil {
+			log.Printf("parse url %s...\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
