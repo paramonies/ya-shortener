@@ -19,16 +19,16 @@ import (
 
 type Config struct {
 	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:":8080"`
-	BaseURL       string `env:"BASE_URL" envDefault:"http://127.0.0.1:8080"`
+	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	FileStorePath string `env:"FILE_STORAGE_PATH"`
 }
 
 var cfg Config
 
 func init() {
-	flag.StringVar(&cfg.SrvAddr, "a", cfg.SrvAddr, "server host and port")
-	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "URL for making http request")
-	flag.StringVar(&cfg.FileStorePath, "f", cfg.FileStorePath, "path to DB-file on disk")
+	flag.StringVar(&cfg.SrvAddr, "-a", cfg.SrvAddr, "server host and port")
+	flag.StringVar(&cfg.BaseURL, "-b", cfg.BaseURL, "URL for making http request")
+	flag.StringVar(&cfg.FileStorePath, "-f", cfg.FileStorePath, "path to DB-file on disk")
 }
 
 func main() {
