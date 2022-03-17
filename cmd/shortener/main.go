@@ -20,7 +20,7 @@ import (
 type Config struct {
 	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
 	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
-	FileStorePath string `env:"FILE_STORAGE_PATH"`
+	FileStorePath string `env:"FILE_STORAGE_PATH" envDefault:""`
 }
 
 var cfg Config
@@ -57,13 +57,13 @@ func main() {
 func NewRouter(db Repository, cfg *Config) *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Post("/", CreateShortURLHadler(db, cfg.BaseURL))
-	r.Post("/api/shorten", CreateShortURLFromJSONHandler(db, cfg.BaseURL))
+	r.Post("/", CreateShortURLHadler(db))
+	r.Post("/api/shorten", CreateShortURLFromJSONHandler(db))
 	r.Get("/{ID}", GetURLByIDHandler(db))
 	return r
 }
 
-func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
+func CreateShortURLHadler(rep Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
@@ -91,12 +91,12 @@ func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusCreated)
-		shortURL := fmt.Sprintf("%s/%d", baseURL, id)
+		shortURL := fmt.Sprintf("%s/%d", cfg.BaseURL, id)
 		w.Write([]byte(shortURL))
 	}
 }
 
-func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerFunc {
+func CreateShortURLFromJSONHandler(rep Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
@@ -129,7 +129,7 @@ func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerF
 		id := hash(URL)
 		rep.Set(fmt.Sprintf("%d", id), URL)
 
-		shortURL := fmt.Sprintf("%s/%d", baseURL, id)
+		shortURL := fmt.Sprintf("%s/%d", cfg.BaseURL, id)
 
 		resBodyJSON := struct {
 			Result string `json:"result"`
