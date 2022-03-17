@@ -32,6 +32,7 @@ func init() {
 }
 
 func main() {
+	log.Printf("starting")
 	err := env.Parse(&cfg)
 	if err != nil {
 		log.Fatal(err)
