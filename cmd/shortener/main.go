@@ -32,13 +32,13 @@ func init() {
 }
 
 func main() {
-
 	err := env.Parse(&cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	flag.Parse()
+	log.Println(cfg)
 
 	var db Repository
 	if cfg.FileStorePath == "" {
@@ -50,6 +50,8 @@ func main() {
 		}
 	}
 	defer db.Close()
+
+	log.Printf("starting server on %s...\n", cfg.SrvAddr)
 	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(db, &cfg)))
 }
 
