@@ -26,9 +26,9 @@ type Config struct {
 var cfg Config
 
 func init() {
-	flag.StringVar(&cfg.SrvAddr, "-a", cfg.SrvAddr, "server host and port")
-	flag.StringVar(&cfg.BaseURL, "-b", cfg.BaseURL, "URL for making http request")
-	flag.StringVar(&cfg.FileStorePath, "-f", cfg.FileStorePath, "path to DB-file on disk")
+	flag.StringVar(&cfg.SrvAddr, "a", cfg.SrvAddr, "server host and port")
+	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "URL for making http request")
+	flag.StringVar(&cfg.FileStorePath, "f", cfg.FileStorePath, "path to DB-file on disk")
 }
 
 func main() {
