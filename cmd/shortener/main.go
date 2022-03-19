@@ -20,7 +20,7 @@ import (
 type Config struct {
 	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:":8080"`
 	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
-	FileStorePath string `env:"FILE_STORAGE_PATH" envDefault:""`
+	FileStorePath string `env:"FILE_STORAGE_PATH"`
 }
 
 var cfg Config
@@ -146,7 +146,7 @@ func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerF
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusCreated)
 		w.Write(resBody)
 	}
