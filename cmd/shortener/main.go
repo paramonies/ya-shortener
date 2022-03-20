@@ -20,7 +20,7 @@ import (
 type Config struct {
 	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:":8080"`
 	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
-	FileStorePath string `env:"FILE_STORAGE_PATH" envDefault:"DB.txt"`
+	FileStorePath string `env:"FILE_STORAGE_PATH" envDefault:"example.txt"`
 }
 
 var cfg Config
@@ -233,13 +233,15 @@ func NewFileDB(path string) (*FileDB, error) {
 		return nil, err
 	}
 
-	var records []Record
+	var records Record
 	err = json.Unmarshal(data, &records)
 	if err != nil {
 		return nil, err
 	}
 
-	return &FileDB{DB: file, Cache: Records{records}}, nil
+	res := []Record{records}
+
+	return &FileDB{DB: file, Cache: Records{res}}, nil
 }
 
 func (f *FileDB) Set(key, value string) error {
