@@ -20,7 +20,7 @@ import (
 type Config struct {
 	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:":8080"`
 	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
-	FileStorePath string `env:"FILE_STORAGE_PATH"`
+	FileStorePath string `env:"FILE_STORAGE_PATH" envDefault:"DB.txt"`
 }
 
 var cfg Config
