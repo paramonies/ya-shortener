@@ -14,23 +14,27 @@ import (
 	"os"
 )
 
-//var srvAddr = "localhost:8080"
-//var baseUrl = "http://" + srvAddr + "/"
-
 type Config struct {
 	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:":8080"`
 	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
-	FileStorePath string
+	FileStorePath string `env:"FILE_STORAGE_PATH" envDefault:"example.txt"`
+}
+
+var cfg Config
+
+func init() {
+	flag.StringVar(&cfg.SrvAddr, "a", cfg.SrvAddr, "server host and port")
+	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "URL for making http request")
+	flag.StringVar(&cfg.FileStorePath, "f", cfg.FileStorePath, "path to DB-file on disk")
 }
 
 func main() {
-	var cfg Config
+	log.Printf("starting")
 	err := env.Parse(&cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	initFlags(&cfg)
 	flag.Parse()
 
 	var db Repository
@@ -43,18 +47,14 @@ func main() {
 		}
 	}
 	defer db.Close()
-	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(db, &cfg)))
-}
 
-func initFlags(cfg *Config) {
-	flag.StringVar(&cfg.SrvAddr, "a", cfg.SrvAddr, "server host and port")
-	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "URL for making http request")
-	flag.StringVar(&cfg.FileStorePath, "f", cfg.FileStorePath, "path to DB-file on disk")
+	log.Printf("starting server on %s...\n", cfg.SrvAddr)
+	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(db, &cfg)))
 }
 
 func NewRouter(db Repository, cfg *Config) *chi.Mux {
 	r := chi.NewRouter()
-
+	log.Println(0)
 	r.Post("/", CreateShortURLHadler(db, cfg.BaseURL))
 	r.Post("/api/shorten", CreateShortURLFromJSONHandler(db, cfg.BaseURL))
 	r.Get("/{ID}", GetURLByIDHandler(db))
@@ -67,6 +67,7 @@ func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 		defer r.Body.Close()
 
 		if err != nil {
+			log.Printf("read body %s...\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -74,6 +75,7 @@ func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 		urlStr := string(b)
 		_, err = url.ParseRequestURI(urlStr)
 		if err != nil {
+			log.Printf("parse url %s...\n", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -81,6 +83,7 @@ func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 		id := hash(urlStr)
 		err = rep.Set(fmt.Sprintf("%d", id), urlStr)
 		if err != nil {
+			log.Printf("rep set %s...\n", err.Error())
 			log.Println(err)
 		}
 
@@ -93,27 +96,31 @@ func CreateShortURLHadler(rep Repository, baseURL string) http.HandlerFunc {
 
 func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println(1)
 		b, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
-
+		log.Println(2)
 		if err != nil {
+			log.Printf("read body %s...\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
+		log.Println(3)
 		var reqBodyJSON struct {
 			URL string `json:"url"`
 		}
-
+		log.Println(4)
 		err = json.Unmarshal(b, &reqBodyJSON)
 		if err != nil {
+			log.Printf("unmarshall body %s...\n", err.Error())
 			http.Error(w, "id not found", http.StatusBadRequest)
 			return
 		}
 		URL := reqBodyJSON.URL
-
+		log.Println(5)
 		_, err = url.ParseRequestURI(URL)
 		if err != nil {
+			log.Printf("parse url %s...\n", err.Error())
 			http.Error(w, "id not found", http.StatusBadRequest)
 			return
 		}
@@ -131,6 +138,7 @@ func CreateShortURLFromJSONHandler(rep Repository, baseURL string) http.HandlerF
 
 		resBody, err := json.Marshal(resBodyJSON)
 		if err != nil {
+			log.Printf("parse url %s...\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -222,13 +230,15 @@ func NewFileDB(path string) (*FileDB, error) {
 		return nil, err
 	}
 
-	var records []Record
+	var records Record
 	err = json.Unmarshal(data, &records)
 	if err != nil {
 		return nil, err
 	}
 
-	return &FileDB{DB: file, Cache: Records{records}}, nil
+	res := []Record{records}
+
+	return &FileDB{DB: file, Cache: Records{res}}, nil
 }
 
 func (f *FileDB) Set(key, value string) error {
