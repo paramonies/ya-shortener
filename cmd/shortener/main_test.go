@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/caarlos0/env/v6"
+	"github.com/paramonies/internal/handlers"
+	"github.com/paramonies/internal/store"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -34,7 +36,7 @@ func TestMux(t *testing.T) {
 			path:   "/",
 			want: want{
 				status: http.StatusCreated,
-				body:   fmt.Sprintf("http://localhost:8080/%d", hash("https://practicum.yandex.ru")),
+				body:   fmt.Sprintf("http://localhost:8080/%d", handlers.Hash("https://practicum.yandex.ru")),
 			},
 		},
 		{
@@ -49,7 +51,7 @@ func TestMux(t *testing.T) {
 		{
 			name:   "GET OK",
 			method: http.MethodGet,
-			path:   fmt.Sprintf("/%d", hash("https://practicum.yandex.ru")),
+			path:   fmt.Sprintf("/%d", handlers.Hash("https://practicum.yandex.ru")),
 			want: want{
 				status:   http.StatusTemporaryRedirect,
 				location: "https://practicum.yandex.ru",
@@ -92,7 +94,7 @@ func TestMux(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	r := NewRouter(NewMapDB(), &cfg)
+	r := NewRouter(store.NewMapDB(), &cfg)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
