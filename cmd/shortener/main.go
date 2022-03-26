@@ -6,6 +6,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/go-chi/chi/v5"
 	"github.com/paramonies/internal/handlers"
+	"github.com/paramonies/internal/middleware"
 	"github.com/paramonies/internal/store"
 	"log"
 	"net/http"
@@ -53,6 +54,9 @@ func main() {
 func NewRouter(db store.Repository, cfg *Config) *chi.Mux {
 	r := chi.NewRouter()
 	log.Println(0)
+
+	r.Use(middleware.GzipDECompressHandler, middleware.GzipCompressHandler)
+
 	r.Post("/", handlers.CreateShortURLHadler(db, cfg.BaseURL))
 	r.Post("/api/shorten", handlers.CreateShortURLFromJSONHandler(db, cfg.BaseURL))
 	r.Get("/{ID}", handlers.GetURLByIDHandler(db))

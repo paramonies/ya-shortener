@@ -61,7 +61,7 @@ func NewFileDB(path string) (*FileDB, error) {
 	}
 
 	data, err := io.ReadAll(file)
-	//defer file.Close()
+	defer file.Close()
 	if err != nil {
 		return nil, err
 	}

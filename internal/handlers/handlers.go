@@ -18,7 +18,6 @@ func CreateShortURLHadler(rep store.Repository, baseURL string) http.HandlerFunc
 		defer r.Body.Close()
 
 		if err != nil {
-			log.Printf("read body %s...\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -26,7 +25,6 @@ func CreateShortURLHadler(rep store.Repository, baseURL string) http.HandlerFunc
 		urlStr := string(b)
 		_, err = url.ParseRequestURI(urlStr)
 		if err != nil {
-			log.Printf("parse url %s...\n", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -35,7 +33,6 @@ func CreateShortURLHadler(rep store.Repository, baseURL string) http.HandlerFunc
 		err = rep.Set(fmt.Sprintf("%d", id), urlStr)
 		if err != nil {
 			log.Printf("rep set %s...\n", err.Error())
-			log.Println(err)
 		}
 
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -52,7 +49,6 @@ func CreateShortURLFromJSONHandler(rep store.Repository, baseURL string) http.Ha
 		defer r.Body.Close()
 		log.Println(2)
 		if err != nil {
-			log.Printf("read body %s...\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -63,7 +59,6 @@ func CreateShortURLFromJSONHandler(rep store.Repository, baseURL string) http.Ha
 		log.Println(4)
 		err = json.Unmarshal(b, &reqBodyJSON)
 		if err != nil {
-			log.Printf("unmarshall body %s...\n", err.Error())
 			http.Error(w, "id not found", http.StatusBadRequest)
 			return
 		}
@@ -71,7 +66,6 @@ func CreateShortURLFromJSONHandler(rep store.Repository, baseURL string) http.Ha
 		log.Println(5)
 		_, err = url.ParseRequestURI(URL)
 		if err != nil {
-			log.Printf("parse url %s...\n", err.Error())
 			http.Error(w, "id not found", http.StatusBadRequest)
 			return
 		}
@@ -89,7 +83,6 @@ func CreateShortURLFromJSONHandler(rep store.Repository, baseURL string) http.Ha
 
 		resBody, err := json.Marshal(resBodyJSON)
 		if err != nil {
-			log.Printf("parse url %s...\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
