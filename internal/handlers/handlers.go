@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v4"
 	"github.com/paramonies/internal/store"
 	"hash/fnv"
 	"io"
@@ -157,6 +159,26 @@ func GetListByUserIDHandler(rep store.Repository, baseURL string) http.HandlerFu
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		w.Write(listB)
+	}
+}
+
+func PingHandler(rep store.Repository, dns string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(context.Background(), store.DBConnectTimeout)
+		defer cancel()
+		conn, err := pgx.Connect(ctx, dns)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = conn.Ping(context.Background())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
 	}
 }
 
