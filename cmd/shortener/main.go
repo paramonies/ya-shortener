@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/go-chi/chi/v5"
 	"github.com/paramonies/internal/handlers"
@@ -15,7 +14,7 @@ import (
 type Config struct {
 	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:":8080"`
 	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
-	FileStorePath string `env:"FILE_STORAGE_PATH"`
+	FileStorePath string `env:"FILE_STORAGE_PATH" envDefault:"./db.txt"`
 }
 
 var cfg Config
@@ -41,7 +40,6 @@ func main() {
 	} else {
 		db, err = store.NewFileDB(cfg.FileStorePath)
 		if err != nil {
-			fmt.Println("!!!")
 			log.Fatal(err)
 		}
 	}
@@ -56,9 +54,11 @@ func NewRouter(db store.Repository, cfg *Config) *chi.Mux {
 	log.Println(0)
 
 	r.Use(middleware.GzipDECompressHandler, middleware.GzipCompressHandler)
+	r.Use(middleware.CookieMiddleware)
 
 	r.Post("/", handlers.CreateShortURLHadler(db, cfg.BaseURL))
 	r.Post("/api/shorten", handlers.CreateShortURLFromJSONHandler(db, cfg.BaseURL))
 	r.Get("/{ID}", handlers.GetURLByIDHandler(db))
+	r.Get("/api/user/urls", handlers.GetListByUserIDHandler(db, cfg.BaseURL))
 	return r
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/paramonies/internal/store"
@@ -30,7 +31,12 @@ func CreateShortURLHadler(rep store.Repository, baseURL string) http.HandlerFunc
 		}
 
 		id := Hash(urlStr)
-		err = rep.Set(fmt.Sprintf("%d", id), urlStr)
+		cookie, err := r.Cookie("user_id")
+		if errors.Is(err, http.ErrNoCookie) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		err = rep.Set(fmt.Sprintf("%d", id), urlStr, cookie.Value)
 		if err != nil {
 			log.Printf("rep set %s...\n", err.Error())
 		}
@@ -71,7 +77,12 @@ func CreateShortURLFromJSONHandler(rep store.Repository, baseURL string) http.Ha
 		}
 
 		id := Hash(URL)
-		rep.Set(fmt.Sprintf("%d", id), URL)
+		cookie, err := r.Cookie("user_id")
+		if errors.Is(err, http.ErrNoCookie) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		rep.Set(fmt.Sprintf("%d", id), URL, cookie.Value)
 
 		shortURL := fmt.Sprintf("%s/%d", baseURL, id)
 
@@ -106,6 +117,46 @@ func GetURLByIDHandler(rep store.Repository) http.HandlerFunc {
 
 		http.Redirect(w, r, val, http.StatusTemporaryRedirect)
 		w.Write([]byte("ID found"))
+	}
+}
+
+func GetListByUserIDHandler(rep store.Repository, baseURL string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("user_id")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		userID := cookie.Value
+		list := rep.GetAllByID(userID)
+		if len(list) == 0 {
+			msg := fmt.Sprintf("No content for user with id %s", userID)
+			http.Error(w, msg, http.StatusNoContent)
+			return
+		}
+
+		type data struct {
+			ShortURL string `json:"short_url"`
+			OrigURL  string `json:"original_url"`
+		}
+
+		var listURL []data
+
+		for key, val := range list {
+			shortURL := fmt.Sprintf("%s/%s", baseURL, key)
+			listURL = append(listURL, data{ShortURL: shortURL, OrigURL: val})
+		}
+
+		listB, err := json.Marshal(listURL)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write(listB)
 	}
 }
 

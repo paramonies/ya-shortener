@@ -2,7 +2,9 @@ package middleware
 
 import (
 	"compress/gzip"
+	"errors"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -63,6 +65,29 @@ func GzipDECompressHandler(next http.Handler) http.Handler {
 
 		r.Body = io.NopCloser(strings.NewReader(string(b)))
 		r.ContentLength = int64(len(b))
+		next.ServeHTTP(w, r)
+	})
+}
+
+func CookieMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := r.Cookie("user_id")
+
+		if errors.Is(err, http.ErrNoCookie) {
+			userID, err := generateToken(10)
+			if err != nil {
+				log.Println("failed to generate token for \"user_id\" cookie: ", err)
+			} else {
+				cookie := &http.Cookie{
+					Name:   "user_id",
+					Value:  userID,
+					Secure: false,
+				}
+				r.AddCookie(cookie)
+				http.SetCookie(w, cookie)
+			}
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }

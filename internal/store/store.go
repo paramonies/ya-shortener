@@ -8,23 +8,27 @@ import (
 )
 
 type Repository interface {
-	Set(key, val string) error
+	Set(key, val, userID string) error
 	Get(key string) (string, error)
+	GetAllByID(id string) map[string]string
 	Close() error
 }
 
 type MapDB struct {
-	DB map[string]string
+	DB map[string]map[string]string
 }
 
 func NewMapDB() *MapDB {
 	return &MapDB{
-		DB: make(map[string]string),
+		DB: make(map[string]map[string]string),
 	}
 }
 
-func (db *MapDB) Set(key, val string) error {
-	db.DB[key] = val
+func (db *MapDB) Set(key, val, userID string) error {
+	db.DB[key] = map[string]string{
+		"url":    val,
+		"userID": userID,
+	}
 	return nil
 }
 
@@ -33,7 +37,17 @@ func (db *MapDB) Get(key string) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("key %s not found in database", key)
 	}
-	return val, nil
+	return val["url"], nil
+}
+
+func (db *MapDB) GetAllByID(id string) map[string]string {
+	data := make(map[string]string)
+	for key, row := range db.DB {
+		if row["userID"] == id {
+			data[key] = row["url"]
+		}
+	}
+	return data
 }
 
 func (db *MapDB) Close() error {
@@ -41,8 +55,9 @@ func (db *MapDB) Close() error {
 }
 
 type Record struct {
-	ID  string `json:"id"`
-	URL string `json:"url"`
+	ID     string `json:"id"`
+	URL    string `json:"url"`
+	UserID string `json:"user_id"`
 }
 
 type Records struct {
@@ -59,30 +74,28 @@ func NewFileDB(path string) (*FileDB, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	data, err := io.ReadAll(file)
 	defer file.Close()
 	if err != nil {
 		return nil, err
 	}
-
-	var records []Record
+	var records Records
 	err = json.Unmarshal(data, &records)
 	if err != nil {
 		return nil, err
 	}
 
-	return &FileDB{DB: file, Cache: Records{records}}, nil
+	return &FileDB{DB: file, Cache: Records{records.Records}}, nil
 }
 
-func (f *FileDB) Set(key, value string) error {
+func (f *FileDB) Set(key, value, userID string) error {
 	for _, r := range f.Cache.Records {
 		if r.ID == key {
 			return nil
 		}
 	}
 
-	r := Record{ID: key, URL: value}
+	r := Record{ID: key, URL: value, UserID: userID}
 	data, err := json.Marshal(r)
 	if err != nil {
 		return err
@@ -105,6 +118,16 @@ func (f *FileDB) Get(key string) (string, error) {
 	}
 
 	return "", fmt.Errorf("key %s not found in database", key)
+}
+
+func (f *FileDB) GetAllByID(id string) map[string]string {
+	data := make(map[string]string)
+	for _, record := range f.Cache.Records {
+		if record.UserID == id {
+			data[record.ID] = record.URL
+		}
+	}
+	return data
 }
 
 func (f *FileDB) Close() error {
