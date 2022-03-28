@@ -188,6 +188,72 @@ func PingHandler(rep store.Repository, dns string) http.HandlerFunc {
 	}
 }
 
+func CreateManyShortURLHadler(rep store.Repository, baseURL string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b, err := io.ReadAll(r.Body)
+		defer r.Body.Close()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		type inputData struct {
+			CorrelationID string `json:"correlation_id"`
+			OriginalURL   string `json:"original_url"`
+		}
+
+		var inputJSON []inputData
+		err = json.Unmarshal(b, &inputJSON)
+		if err != nil {
+			msg := fmt.Sprintf("failed to unmarshal JSON: %s", err.Error())
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+
+		cookie, err := r.Cookie("user_id")
+		if errors.Is(err, http.ErrNoCookie) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		data := make(map[string]string)
+		for _, row := range inputJSON {
+			URL := row.OriginalURL
+			_, err = url.ParseRequestURI(URL)
+			if err != nil {
+				msg := fmt.Sprintf("id %s not found", err.Error())
+				http.Error(w, msg, http.StatusBadRequest)
+				return
+			}
+			id := Hash(URL)
+			rep.Set(fmt.Sprintf("%d", id), URL, cookie.Value)
+			shortURL := fmt.Sprintf("%s/%d", baseURL, id)
+			data[row.CorrelationID] = shortURL
+		}
+
+		type outputData struct {
+			CorrelationID string `json:"correlation_id"`
+			ShortURL      string `json:"short_url"`
+		}
+
+		var outputJSON []outputData
+
+		for key, val := range data {
+			outputJSON = append(outputJSON, outputData{CorrelationID: key, ShortURL: val})
+		}
+
+		resBody, err := json.Marshal(outputJSON)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusCreated)
+		w.Write(resBody)
+	}
+}
+
 func Hash(s string) uint32 {
 	h := fnv.New32a()
 	h.Write([]byte(s))
