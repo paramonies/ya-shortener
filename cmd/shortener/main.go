@@ -43,12 +43,12 @@ func main() {
 			log.Fatal(err)
 		}
 	} else if cfg.FileStorePath == "" {
-		db = store.NewMapDB()
-	} else {
 		db, err = store.NewFileDB(cfg.FileStorePath)
 		if err != nil {
 			log.Fatal(err)
 		}
+	} else {
+		db = store.NewMapDB()
 	}
 	defer db.Close()
 

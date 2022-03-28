@@ -10,7 +10,7 @@ import (
 type Repository interface {
 	Set(key, val, userID string) error
 	Get(key string) (string, error)
-	GetAllByID(id string) map[string]string
+	GetAllByID(id string) (map[string]string, error)
 	Close() error
 }
 
@@ -40,14 +40,14 @@ func (db *MapDB) Get(key string) (string, error) {
 	return val["url"], nil
 }
 
-func (db *MapDB) GetAllByID(id string) map[string]string {
+func (db *MapDB) GetAllByID(id string) (map[string]string, error) {
 	data := make(map[string]string)
 	for key, row := range db.DB {
 		if row["userID"] == id {
 			data[key] = row["url"]
 		}
 	}
-	return data
+	return data, nil
 }
 
 func (db *MapDB) Close() error {
@@ -120,14 +120,14 @@ func (f *FileDB) Get(key string) (string, error) {
 	return "", fmt.Errorf("key %s not found in database", key)
 }
 
-func (f *FileDB) GetAllByID(id string) map[string]string {
+func (f *FileDB) GetAllByID(id string) (map[string]string, error) {
 	data := make(map[string]string)
 	for _, record := range f.Cache.Records {
 		if record.UserID == id {
 			data[record.ID] = record.URL
 		}
 	}
-	return data
+	return data, nil
 }
 
 func (f *FileDB) Close() error {

@@ -131,7 +131,13 @@ func GetListByUserIDHandler(rep store.Repository, baseURL string) http.HandlerFu
 		}
 
 		userID := cookie.Value
-		list := rep.GetAllByID(userID)
+		list, err := rep.GetAllByID(userID)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		if len(list) == 0 {
 			msg := fmt.Sprintf("No content for user with id %s", userID)
 			http.Error(w, msg, http.StatusNoContent)
