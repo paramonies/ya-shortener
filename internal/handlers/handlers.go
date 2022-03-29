@@ -10,7 +10,6 @@ import (
 	"github.com/paramonies/internal/store"
 	"hash/fnv"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 )
@@ -38,40 +37,43 @@ func CreateShortURLHadler(rep store.Repository, baseURL string) http.HandlerFunc
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		shortURL := fmt.Sprintf("%s/%d", baseURL, id)
 		err = rep.Set(fmt.Sprintf("%d", id), urlStr, cookie.Value)
 		if err != nil {
-			log.Printf("rep set %s...\n", err.Error())
+			if errors.Is(err, store.ConstraintViolationError) {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusConflict)
+				w.Write([]byte(shortURL))
+				return
+			}
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusCreated)
-		shortURL := fmt.Sprintf("%s/%d", baseURL, id)
+
 		w.Write([]byte(shortURL))
 	}
 }
 
 func CreateShortURLFromJSONHandler(rep store.Repository, baseURL string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println(1)
 		b, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
-		log.Println(2)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println(3)
 		var reqBodyJSON struct {
 			URL string `json:"url"`
 		}
-		log.Println(4)
 		err = json.Unmarshal(b, &reqBodyJSON)
 		if err != nil {
 			http.Error(w, "id not found", http.StatusBadRequest)
 			return
 		}
 		URL := reqBodyJSON.URL
-		log.Println(5)
 		_, err = url.ParseRequestURI(URL)
 		if err != nil {
 			http.Error(w, "id not found", http.StatusBadRequest)
@@ -84,7 +86,7 @@ func CreateShortURLFromJSONHandler(rep store.Repository, baseURL string) http.Ha
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		rep.Set(fmt.Sprintf("%d", id), URL, cookie.Value)
+		errSet := rep.Set(fmt.Sprintf("%d", id), URL, cookie.Value)
 
 		shortURL := fmt.Sprintf("%s/%d", baseURL, id)
 
@@ -100,6 +102,17 @@ func CreateShortURLFromJSONHandler(rep store.Repository, baseURL string) http.Ha
 			return
 		}
 
+		if errSet != nil {
+			if errors.Is(errSet, store.ConstraintViolationError) {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusConflict)
+				w.Write(resBody)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusCreated)
 		w.Write(resBody)
@@ -112,7 +125,6 @@ func GetURLByIDHandler(rep store.Repository) http.HandlerFunc {
 
 		val, err := rep.Get(id)
 		if err != nil {
-			log.Println(err)
 			http.Error(w, "id not found", http.StatusBadRequest)
 			return
 		}

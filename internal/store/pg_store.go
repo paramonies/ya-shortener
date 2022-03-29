@@ -4,12 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v4"
 	"time"
 )
 
 var (
-	DBConnectTimeout = 1 * time.Second
+	DBConnectTimeout         = 1 * time.Second
+	ConstraintViolationError = errors.New("original url conflict")
 )
 
 type PostgresDB struct {
@@ -46,6 +49,13 @@ RETURNING id
 	if err := row.Scan(&id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return errors.New("failed to insert new row")
+		}
+
+		var pgerr *pgconn.PgError
+		if errors.As(err, &pgerr) {
+			if pgerrcode.IsIntegrityConstraintViolation(pgerr.SQLState()) {
+				return ConstraintViolationError
+			}
 		}
 		return err
 	}
