@@ -144,7 +144,7 @@ func CreateShortURLFromJSONHandler(rep store.Repository, baseURL string) http.Ha
 				w.Write(resBody)
 				return
 			}
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, errSet.Error(), http.StatusBadRequest)
 			return
 		}
 		log.Println("save url info in repository")
