@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v4"
@@ -11,8 +10,8 @@ import (
 )
 
 var (
-	DBConnectTimeout         = 1 * time.Second
-	ConstraintViolationError = errors.New("original url conflict")
+	DBConnectTimeout       = 1 * time.Second
+	ErrConstraintViolation = errors.New("original url conflict")
 )
 
 type PostgresDB struct {
@@ -54,7 +53,7 @@ RETURNING id
 		var pgerr *pgconn.PgError
 		if errors.As(err, &pgerr) {
 			if pgerrcode.IsIntegrityConstraintViolation(pgerr.SQLState()) {
-				return ConstraintViolationError
+				return ErrConstraintViolation
 			}
 		}
 		return err
@@ -70,7 +69,6 @@ func (p *PostgresDB) Get(key string) (string, error) {
 SELECT original
 FROM urls WHERE short=$1
 `
-	fmt.Println(key)
 	var original string
 	row := p.Conn.QueryRow(ctx, query, key)
 	if err := row.Scan(&original); err != nil {

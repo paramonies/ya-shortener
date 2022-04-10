@@ -28,7 +28,6 @@ func init() {
 }
 
 func main() {
-	log.Printf("starting")
 	err := env.Parse(&cfg)
 	if err != nil {
 		log.Fatal(err)
@@ -57,8 +56,8 @@ func main() {
 }
 
 func NewRouter(db store.Repository, cfg *Config) *chi.Mux {
+	log.Println("creating new chi-router")
 	r := chi.NewRouter()
-	log.Println(0)
 
 	r.Use(middleware.GzipDECompressHandler, middleware.GzipCompressHandler)
 	r.Use(middleware.CookieMiddleware)
