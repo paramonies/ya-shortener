@@ -11,6 +11,7 @@ type Repository interface {
 	Set(key, val, userID string) error
 	Get(key string) (string, error)
 	GetAllByID(id string) (map[string]string, error)
+	Ping() error
 	Close() error
 }
 
@@ -48,6 +49,10 @@ func (db *MapDB) GetAllByID(id string) (map[string]string, error) {
 		}
 	}
 	return data, nil
+}
+
+func (db *MapDB) Ping() error {
+	return nil
 }
 
 func (db *MapDB) Close() error {
@@ -128,6 +133,10 @@ func (f *FileDB) GetAllByID(id string) (map[string]string, error) {
 		}
 	}
 	return data, nil
+}
+
+func (f *FileDB) Ping() error {
+	return nil
 }
 
 func (f *FileDB) Close() error {

@@ -105,6 +105,11 @@ FROM urls WHERE user_id=$1
 	}
 	return data, nil
 }
+
+func (p *PostgresDB) Ping() error {
+	return p.Conn.Ping(context.Background())
+}
+
 func (p *PostgresDB) Close() error {
 	return p.Conn.Close(context.Background())
 }

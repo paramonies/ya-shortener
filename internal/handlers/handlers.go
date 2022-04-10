@@ -1,12 +1,10 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v4"
 	"github.com/paramonies/internal/store"
 	"hash/fnv"
 	"io"
@@ -238,22 +236,12 @@ func GetListByUserIDHandler(rep store.Repository, baseURL string) http.HandlerFu
 	}
 }
 
-func PingHandler(rep store.Repository, dns string) http.HandlerFunc {
+func PingHandler(rep store.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("ping database")
 		log.Printf("request url: %s %s", r.Method, r.URL)
 
-		ctx, cancel := context.WithTimeout(context.Background(), store.DBConnectTimeout)
-		defer cancel()
-
-		conn, err := pgx.Connect(ctx, dns)
-		if err != nil {
-			log.Printf("error: %v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		err = conn.Ping(context.Background())
+		err := rep.Ping()
 		if err != nil {
 			log.Printf("error: %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
