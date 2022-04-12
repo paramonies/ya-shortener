@@ -352,7 +352,7 @@ func CreateManyShortURLHadler(rep store.Repository, baseURL string) http.Handler
 }
 
 type Item struct {
-	UrlID  string
+	URLID  string
 	UserID string
 }
 
@@ -411,7 +411,7 @@ func execDelete(ids []string, userID string, rep store.Repository) {
 
 	go func() {
 		for _, id := range ids {
-			inputCh <- Item{UrlID: id, UserID: userID}
+			inputCh <- Item{URLID: id, UserID: userID}
 		}
 		close(inputCh)
 	}()
@@ -431,6 +431,6 @@ func execDelete(ids []string, userID string, rep store.Repository) {
 		} else {
 			msg = "URL deleted"
 		}
-		log.Printf("short URL: %s, user: %s, msg: %s", errItem.UrlID, errItem.UserID, msg)
+		log.Printf("short URL: %s, user: %s, msg: %s", errItem.URLID, errItem.UserID, msg)
 	}
 }

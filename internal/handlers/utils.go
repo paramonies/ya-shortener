@@ -44,7 +44,7 @@ func newWorker(inputCh <-chan Item, rep store.Repository) chan ErrorItem {
 
 	go func() {
 		for item := range inputCh {
-			err := rep.Delete(item.UrlID, item.UserID)
+			err := rep.Delete(item.URLID, item.UserID)
 			outCh <- ErrorItem{Item: item, Err: err}
 		}
 		close(outCh)
