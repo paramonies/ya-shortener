@@ -111,6 +111,15 @@ func TestMux(t *testing.T) {
 				body:   `[{"correlation_id":"first","short_url":"http://localhost:8080/3159787651"},{"correlation_id":"second","short_url":"http://localhost:8080/740694524"}]`,
 			},
 		},
+		{
+			name:   "delete many short URLs Accepted",
+			body:   `["3159787651", "740694524"]`,
+			method: http.MethodDelete,
+			path:   "/api/user/urls",
+			want: want{
+				status: http.StatusAccepted,
+			},
+		},
 	}
 
 	cfg := Config{

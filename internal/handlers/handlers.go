@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/paramonies/internal/store"
-	"hash/fnv"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 )
+
+const workersCount = 10
 
 func CreateShortURLHadler(rep store.Repository, baseURL string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -165,6 +166,12 @@ func GetURLByIDHandler(rep store.Repository) http.HandlerFunc {
 		val, err := rep.Get(id)
 		if err != nil {
 			log.Printf("error: %v", err)
+
+			if errors.Is(err, store.ErrGone) {
+				http.Error(w, err.Error(), http.StatusGone)
+				return
+			}
+
 			http.Error(w, "id not found", http.StatusBadRequest)
 			return
 		}
@@ -344,8 +351,86 @@ func CreateManyShortURLHadler(rep store.Repository, baseURL string) http.Handler
 	}
 }
 
-func Hash(s string) uint32 {
-	h := fnv.New32a()
-	h.Write([]byte(s))
-	return h.Sum32()
+type Item struct {
+	UrlID  string
+	UserID string
+}
+
+type ErrorItem struct {
+	Item
+	Err error
+}
+
+func DeleteManyShortURLHadler(rep store.Repository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("delete many short URLs")
+		log.Printf("request url: %s %s", r.Method, r.URL)
+
+		b, err := io.ReadAll(r.Body)
+		defer r.Body.Close()
+		log.Printf("request body: %s", string(b))
+
+		if err != nil {
+			log.Printf("error: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var ids []string
+		err = json.Unmarshal(b, &ids)
+		if err != nil {
+			msg := fmt.Sprintf("failed to unmarshal JSON: %s", err.Error())
+			log.Println(msg)
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+
+		cookie, err := r.Cookie("user_id")
+		if errors.Is(err, http.ErrNoCookie) {
+			log.Printf("error: %v", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Printf("cookie: %s=%s", cookie.Name, cookie.Value)
+
+		go execDelete(ids, cookie.Value, rep)
+
+		resBody := "urls deleted"
+
+		w.WriteHeader(http.StatusAccepted)
+		w.Write([]byte(resBody))
+
+		log.Printf("response body: %s", resBody)
+		log.Println(resBody)
+	}
+}
+
+func execDelete(ids []string, userID string, rep store.Repository) {
+	log.Println("async deleting many short URLs")
+	inputCh := make(chan Item)
+
+	go func() {
+		for _, id := range ids {
+			inputCh <- Item{UrlID: id, UserID: userID}
+		}
+		close(inputCh)
+	}()
+
+	fanOutChs := fanOut(inputCh, workersCount)
+
+	workerChs := make([]chan ErrorItem, 0, workersCount)
+	for _, fanOutCh := range fanOutChs {
+		workerCh := newWorker(fanOutCh, rep)
+		workerChs = append(workerChs, workerCh)
+	}
+
+	for errItem := range fanIn(workerChs...) {
+		var msg string
+		if errItem.Err != nil {
+			msg = fmt.Sprintf("Error deleting URL: %v", errItem.Err)
+		} else {
+			msg = "URL deleted"
+		}
+		log.Printf("short URL: %s, user: %s, msg: %s", errItem.UrlID, errItem.UserID, msg)
+	}
 }
