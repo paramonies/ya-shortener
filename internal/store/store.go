@@ -3,7 +3,6 @@ package store
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 )
 
@@ -79,16 +78,19 @@ func NewFileDB(path string) (*FileDB, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := io.ReadAll(file)
-	defer file.Close()
-	if err != nil {
-		return nil, err
-	}
 	var records Records
-	err = json.Unmarshal(data, &records)
-	if err != nil {
-		return nil, err
-	}
+
+	// попытка десериализовать пустоту приводит к ошибке, пустая строка - это некорректный джейсон
+
+	// data, err := io.ReadAll(file)
+	// defer file.Close()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// err = json.Unmarshal(data, &records)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return &FileDB{DB: file, Cache: Records{records.Records}}, nil
 }
