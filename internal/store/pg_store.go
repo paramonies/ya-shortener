@@ -3,9 +3,12 @@ package store
 import (
 	"context"
 	"errors"
+	"database/sql"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v4"
+	"github.com/golang-migrate/migrate"
+	"github.com/golang-migrate/migrate/database/postgres"
 	"time"
 )
 
@@ -18,14 +21,20 @@ type PostgresDB struct {
 	Conn *pgx.Conn
 }
 
-func NewPostgresDB(dns string) (*PostgresDB, error) {
+func NewPostgresDB(dsn string) (*PostgresDB, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DBConnectTimeout)
 	defer cancel()
-	conn, err := pgx.Connect(ctx, dns)
+	conn, err := pgx.Connect(ctx, dsn)
 	if err != nil {
 		return nil, err
 	}
 
+    	db, err := sql.Open("postgres", dsn)
+    	driver, err := postgres.WithInstance(db, &postgres.Config{})
+    	m, err := migrate.NewWithDatabaseInstance(
+        	"../../migrations",
+        	"postgres", driver)
+    	m.Up()
 	return &PostgresDB{Conn: conn}, nil
 }
 
