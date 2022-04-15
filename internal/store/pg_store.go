@@ -33,7 +33,7 @@ func NewPostgresDB(dsn string) (*PostgresDB, error) {
 	db, err := sql.Open("postgres", dsn)
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	m, err := migrate.NewWithDatabaseInstance(
-		"../../migrations",
+		"file://../../migrations",
 		"postgres", driver)
 	m.Up()
 	return &PostgresDB{Conn: conn}, nil
