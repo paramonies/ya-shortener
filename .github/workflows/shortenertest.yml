@@ -52,7 +52,6 @@ jobs:
         run: |
           shortenertest -test.v -test.run=^TestIteration1$ \
               -binary-path=cmd/shortener/shortener \
-              -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 
       - name: "Code increment #2"
         if: always()
@@ -70,7 +69,6 @@ jobs:
           shortenertest -test.v -test.run=^TestIteration4$ \
               -source-path=. \
               -binary-path=cmd/shortener/shortener \
-              -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 
       - name: "Code increment #5"
         if: always()
@@ -82,7 +80,6 @@ jobs:
               -server-host=$SERVER_HOST \
               -server-port=$SERVER_PORT \
               -server-base-url="http://$SERVER_HOST:$SERVER_PORT" \
-              -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 
       - name: "Code increment #6"
         if: always()
@@ -94,7 +91,6 @@ jobs:
               -server-port=$SERVER_PORT \
               -file-storage-path=$TEMP_FILE \
               -source-path=. \
-              -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 
       - name: "Code increment #7"
         if: always()
@@ -106,7 +102,6 @@ jobs:
               -server-port=$SERVER_PORT \
               -file-storage-path=$TEMP_FILE \
               -source-path=. \
-              -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 
       - name: "Code increment #8"
         if: always()
@@ -114,7 +109,6 @@ jobs:
           shortenertest -test.v -test.run=^TestIteration8$ \
               -source-path=. \
               -binary-path=cmd/shortener/shortener \
-              -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 
       - name: "Code increment #9"
         if: always()
@@ -122,7 +116,6 @@ jobs:
           shortenertest -test.v -test.run=^TestIteration9$ \
               -source-path=. \
               -binary-path=cmd/shortener/shortener \
-              -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 
       - name: "Code increment #10"
         if: always()

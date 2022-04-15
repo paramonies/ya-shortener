@@ -2,14 +2,15 @@ package store
 
 import (
 	"context"
-	"errors"
 	"database/sql"
+	"errors"
+	"time"
+
+	"github.com/golang-migrate/migrate"
+	"github.com/golang-migrate/migrate/database/postgres"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v4"
-	"github.com/golang-migrate/migrate"
-	"github.com/golang-migrate/migrate/database/postgres"
-	"time"
 )
 
 var (
@@ -29,12 +30,12 @@ func NewPostgresDB(dsn string) (*PostgresDB, error) {
 		return nil, err
 	}
 
-    	db, err := sql.Open("postgres", dsn)
-    	driver, err := postgres.WithInstance(db, &postgres.Config{})
-    	m, err := migrate.NewWithDatabaseInstance(
-        	"../../migrations",
-        	"postgres", driver)
-    	m.Up()
+	db, err := sql.Open("postgres", dsn)
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	m, err := migrate.NewWithDatabaseInstance(
+		"../../migrations",
+		"postgres", driver)
+	m.Up()
 	return &PostgresDB{Conn: conn}, nil
 }
 
