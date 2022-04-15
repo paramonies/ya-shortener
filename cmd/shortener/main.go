@@ -13,8 +13,8 @@ import (
 )
 
 type Config struct {
-	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:":8080"`
-	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
+	SrvAddr       string `env:"SERVER_ADDRESS"`
+	BaseURL       string `env:"BASE_URL"`
 	FileStorePath string `env:"FILE_STORAGE_PATH"`
 	DatabaseDNS   string `env:"DATABASE_DSN"`
 }
