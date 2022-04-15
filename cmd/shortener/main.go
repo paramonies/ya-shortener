@@ -42,7 +42,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-	} else if cfg.FileStorePath == "" {
+	} else if cfg.FileStorePath != "" {
 		db, err = store.NewFileDB(cfg.FileStorePath)
 		if err != nil {
 			log.Fatal(err)
