@@ -2,20 +2,21 @@ package main
 
 import (
 	"flag"
+	"log"
+	"net/http"
+
 	"github.com/caarlos0/env/v6"
 	"github.com/go-chi/chi/v5"
 	"github.com/paramonies/internal/handlers"
 	"github.com/paramonies/internal/middleware"
 	"github.com/paramonies/internal/store"
-	"log"
-	"net/http"
 )
 
 type Config struct {
 	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:":8080"`
 	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	FileStorePath string `env:"FILE_STORAGE_PATH"`
-	DatabaseDNS   string `env:"DATABASE_DSN" envDefault:"postgresql://postgres:123456@localhost/shortener-api?connect_timeout=10&sslmode=disable"`
+	DatabaseDNS   string `env:"DATABASE_DSN"`
 }
 
 var cfg Config
@@ -41,7 +42,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-	} else if cfg.FileStorePath == "" {
+	} else if cfg.FileStorePath != "" {
 		db, err = store.NewFileDB(cfg.FileStorePath)
 		if err != nil {
 			log.Fatal(err)
