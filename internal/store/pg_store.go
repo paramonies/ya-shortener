@@ -2,29 +2,62 @@ package store
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"fmt"
+	"log"
+	"os"
+	"time"
+
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v4"
-	"time"
+	"github.com/rubenv/sql-migrate"
 )
 
 var (
 	DBConnectTimeout       = 1 * time.Second
 	ErrConstraintViolation = errors.New("original url conflict")
+	MigDirName             = "migrations"
 )
 
 type PostgresDB struct {
 	Conn *pgx.Conn
 }
 
-func NewPostgresDB(dns string) (*PostgresDB, error) {
+func NewPostgresDB(dsn string) (*PostgresDB, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DBConnectTimeout)
 	defer cancel()
-	conn, err := pgx.Connect(ctx, dns)
+	conn, err := pgx.Connect(ctx, dsn)
 	if err != nil {
+		log.Printf("failed to establishe a connection with a PostgreSQL server: %v", err)
 		return nil, err
 	}
+
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		log.Printf("failed to open DB: %v", err)
+		return nil, err
+	}
+
+	rootDir, err := os.Getwd()
+	if err != nil {
+		log.Println(rootDir)
+		return nil, err
+	}
+
+	MigDirPath := fmt.Sprintf("%s/%s", rootDir, MigDirName)
+
+	migrations := &migrate.FileMigrationSource{
+		Dir: MigDirPath,
+	}
+
+	n, err := migrate.Exec(db, "postgres", migrations, migrate.Up)
+	if err != nil {
+		log.Printf("failed to apply migrations: %v", err)
+		return nil, err
+	}
+	log.Printf("Applied %d migrations!\n", n)
 
 	return &PostgresDB{Conn: conn}, nil
 }

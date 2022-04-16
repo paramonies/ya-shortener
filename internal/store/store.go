@@ -79,15 +79,24 @@ func NewFileDB(path string) (*FileDB, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := io.ReadAll(file)
-	defer file.Close()
+
+	var records Records
+
+	fileInfo, err := file.Stat()
 	if err != nil {
 		return nil, err
 	}
-	var records Records
-	err = json.Unmarshal(data, &records)
-	if err != nil {
-		return nil, err
+
+	if fileInfo.Size() != 0 {
+		data, err := io.ReadAll(file)
+		defer file.Close()
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(data, &records)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &FileDB{DB: file, Cache: Records{records.Records}}, nil
