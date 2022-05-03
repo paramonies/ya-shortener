@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	DBConnectTimeout       = 1 * time.Second
+	DBConnectTimeout       = 3 * time.Second
 	ErrConstraintViolation = errors.New("original url conflict")
 	MigDirName             = "migrations"
 )
