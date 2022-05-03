@@ -5,6 +5,8 @@ run:
 .PHONY: env_up
 env_up:
 	docker-compose up -d
+	docker-compose ps
+	./build/wait.sh
 	sql-migrate up -env=local
 	sql-migrate status -env=local
 
