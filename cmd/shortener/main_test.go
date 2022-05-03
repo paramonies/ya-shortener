@@ -99,7 +99,7 @@ func TestMux(t *testing.T) {
 			path:   "/api/user/urls",
 			want: want{
 				status: http.StatusOK,
-				body:   `[{"short_url":"http://localhost:8080/3353207204","original_url":"https://practicum.yandex.ru"},{"short_url":"http://localhost:8080/3003527198","original_url":"https://practicum-1.yandex.ru"}]`,
+				body:   `[{"short_url":"http://localhost:8080/3003527198","original_url":"https://practicum-1.yandex.ru"},{"short_url":"http://localhost:8080/3353207204","original_url":"https://practicum.yandex.ru"}]`,
 			},
 		},
 		{

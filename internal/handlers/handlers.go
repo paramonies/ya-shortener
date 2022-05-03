@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"sort"
 )
 
 func CreateShortURLHadler(rep store.Repository, baseURL string) http.HandlerFunc {
@@ -214,8 +215,15 @@ func GetListByUserIDHandler(rep store.Repository, baseURL string) http.HandlerFu
 
 		var listURL []data
 
-		for key, val := range list {
-			shortURL := fmt.Sprintf("%s/%s", baseURL, key)
+		keys := make([]string, 0, len(list))
+		for k := range list {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			val := list[k]
+			shortURL := fmt.Sprintf("%s/%s", baseURL, k)
 			listURL = append(listURL, data{ShortURL: shortURL, OrigURL: val})
 			log.Printf("\t %s %s", shortURL, val)
 		}
@@ -324,8 +332,14 @@ func CreateManyShortURLHadler(rep store.Repository, baseURL string) http.Handler
 
 		var outputJSON []outputData
 
-		for key, val := range data {
-			outputJSON = append(outputJSON, outputData{CorrelationID: key, ShortURL: val})
+		keys := make([]string, 0, len(data))
+		for k := range data {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			outputJSON = append(outputJSON, outputData{CorrelationID: k, ShortURL: data[k]})
 		}
 
 		resBody, err := json.Marshal(outputJSON)
