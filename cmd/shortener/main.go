@@ -14,7 +14,7 @@ import (
 )
 
 type Config struct {
-	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:":8080"`
+	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
 	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	FileStorePath string `env:"FILE_STORAGE_PATH"`
 	//DatabaseDSN   string `env:"DATABASE_DSN" envDefault:"postgresql://postgres:123456@localhost/shortener-api?connect_timeout=10&sslmode=disable"`
