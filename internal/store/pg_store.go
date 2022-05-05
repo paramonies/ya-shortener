@@ -13,6 +13,8 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v4"
 	"github.com/rubenv/sql-migrate"
+
+	_ "github.com/lib/pq"
 )
 
 var (
