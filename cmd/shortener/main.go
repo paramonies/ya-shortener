@@ -17,8 +17,8 @@ type Config struct {
 	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
 	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	FileStorePath string `env:"FILE_STORAGE_PATH"`
-	DatabaseDSN   string `env:"DATABASE_DSN" envDefault:"postgresql://postgres:123456@localhost:5432/shortener-api?connect_timeout=10&sslmode=disable"`
-	//DatabaseDSN string `env:"DATABASE_DSN"`
+	//DatabaseDSN   string `env:"DATABASE_DSN" envDefault:"postgresql://postgres:123456@localhost:5432/shortener-api?connect_timeout=10&sslmode=disable"`
+	DatabaseDSN string `env:"DATABASE_DSN"`
 }
 
 var cfg Config
@@ -40,6 +40,7 @@ func main() {
 
 	var db store.Repository
 	if cfg.DatabaseDSN != "" {
+		cfg.DatabaseDSN = "postgresql://postgres:123456@localhost:5432/shortener-api?connect_timeout=10&sslmode=disable"
 		db, err = store.NewPostgresDB(cfg.DatabaseDSN)
 		if err != nil {
 			os.Exit(1)
