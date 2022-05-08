@@ -71,5 +71,6 @@ func NewRouter(db store.Repository, cfg *Config) *chi.Mux {
 	r.Get("/api/user/urls", handlers.GetListByUserIDHandler(db, cfg.BaseURL))
 	r.Get("/ping", handlers.PingHandler(db))
 	r.Post("/api/shorten/batch", handlers.CreateManyShortURLHadler(db, cfg.BaseURL))
+	r.Delete("/api/user/urls", handlers.DeleteManyShortURLHadler(db))
 	return r
 }

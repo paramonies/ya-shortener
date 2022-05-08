@@ -20,6 +20,7 @@ import (
 var (
 	DBConnectTimeout       = 3 * time.Second
 	ErrConstraintViolation = errors.New("original url conflict")
+	ErrGone                = errors.New("gone")
 	MigDirName             = "migrations"
 )
 
@@ -101,17 +102,23 @@ func (p *PostgresDB) Get(key string) (string, error) {
 	defer cancel()
 
 	query := `
-SELECT original
+SELECT original, deleted
 FROM urls WHERE short=$1
 `
 	var original string
+	var deleted bool
 	row := p.Conn.QueryRow(ctx, query, key)
-	if err := row.Scan(&original); err != nil {
+	if err := row.Scan(&original, &deleted); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return "", errors.New("failed to get original url")
 		}
 		return "", err
 	}
+
+	if deleted {
+		return "", ErrGone
+	}
+
 	return original, nil
 }
 
@@ -139,6 +146,23 @@ FROM urls WHERE user_id=$1
 		data[short] = original
 	}
 	return data, nil
+}
+
+func (p *PostgresDB) Delete(urlID, userID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), DBConnectTimeout)
+	defer cancel()
+
+	query := `
+UPDATE urls 
+SET deleted = true
+WHERE short = $1 and user_id = $2
+`
+	rows, err := p.Conn.Query(ctx, query, urlID, userID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	return nil
 }
 
 func (p *PostgresDB) Ping() error {
