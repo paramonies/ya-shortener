@@ -74,9 +74,10 @@ INSERT INTO urls
 (
     short,
     original,
-    user_id
+    user_id,
+    deleted
 )
-VALUES ($1, $2, $3)
+VALUES ($1, $2, $3, false)
 RETURNING id
 `
 	var id string
@@ -101,6 +102,8 @@ func (p *PostgresDB) Get(key string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DBConnectTimeout)
 	defer cancel()
 
+	log.Printf("=== inside pg GET")
+
 	query := `
 SELECT original, deleted
 FROM urls WHERE short=$1
@@ -109,6 +112,7 @@ FROM urls WHERE short=$1
 	var deleted bool
 	row := p.Conn.QueryRow(ctx, query, key)
 	if err := row.Scan(&original, &deleted); err != nil {
+		log.Printf("=== inside pg GET err: %s for id: %s", err, key)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return "", errors.New("failed to get original url")
 		}
@@ -116,9 +120,11 @@ FROM urls WHERE short=$1
 	}
 
 	if deleted {
+		log.Printf("=== inside pg GET GONE for id: %s", key)
 		return "", ErrGone
 	}
 
+	log.Printf("=== inside pg GET end without errors")
 	return original, nil
 }
 
@@ -152,6 +158,8 @@ func (p *PostgresDB) Delete(urlID, userID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), DBConnectTimeout)
 	defer cancel()
 
+	log.Printf("=== inside pg delete")
+
 	query := `
 UPDATE urls 
 SET deleted = true
@@ -159,8 +167,11 @@ WHERE short = $1 and user_id = $2
 `
 	rows, err := p.Conn.Query(ctx, query, urlID, userID)
 	if err != nil {
+		log.Printf("=== inside pg delete: %v", err)
 		return err
 	}
+
+	log.Printf("=== inside pg delete end without errors")
 	defer rows.Close()
 	return nil
 }
