@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"os"
 	"time"
@@ -12,9 +13,8 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v4"
-	"github.com/rubenv/sql-migrate"
-
 	_ "github.com/lib/pq"
+	"github.com/rubenv/sql-migrate"
 )
 
 var (
@@ -25,13 +25,13 @@ var (
 )
 
 type PostgresDB struct {
-	Conn *pgx.Conn
+	Conn *pgxpool.Pool
 }
 
 func NewPostgresDB(dsn string) (*PostgresDB, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DBConnectTimeout)
 	defer cancel()
-	conn, err := pgx.Connect(ctx, dsn)
+	conn, err := pgxpool.Connect(ctx, dsn)
 	if err != nil {
 		log.Printf("failed to establishe a connection with a PostgreSQL server: %v", err)
 		return nil, err
@@ -163,11 +163,14 @@ func (p *PostgresDB) Delete(urlID, userID string) error {
 	query := `
 UPDATE urls 
 SET deleted = true
-WHERE short = $1 and user_id = $2
+WHERE short = $1 and user_id = $2 and deleted= false
 `
 	rows, err := p.Conn.Query(ctx, query, urlID, userID)
 	if err != nil {
 		log.Printf("=== inside pg delete: %v", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return errors.New("record not found or already deleted")
+		}
 		return err
 	}
 
@@ -181,5 +184,6 @@ func (p *PostgresDB) Ping() error {
 }
 
 func (p *PostgresDB) Close() error {
-	return p.Conn.Close(context.Background())
+	p.Conn.Close()
+	return nil
 }
