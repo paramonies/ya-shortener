@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/paramonies/internal/config"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/paramonies/internal/config"
 	"github.com/paramonies/internal/handlers"
 	"github.com/paramonies/internal/middleware"
 	"github.com/paramonies/internal/store"

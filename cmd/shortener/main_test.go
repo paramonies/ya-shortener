@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/paramonies/internal/config"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -123,7 +124,7 @@ func TestMux(t *testing.T) {
 		},
 	}
 
-	cfg := Config{
+	cfg := config.Config{
 		SrvAddr: "localhost:8080",
 		BaseURL: "http://localhost:8080",
 	}
