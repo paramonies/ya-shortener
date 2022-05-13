@@ -2,6 +2,10 @@
 run:
 	go run cmd/shortener/main.go
 
+.PHONY: fmt
+fmt:
+	goimports -local "github.com/paramonies" -w .
+
 .PHONY: env_up
 env_up:
 	docker-compose up -d

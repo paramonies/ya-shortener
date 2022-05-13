@@ -5,16 +5,17 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"os"
 	"time"
+
+	"github.com/jackc/pgx/v4/pgxpool"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v4"
 	_ "github.com/lib/pq"
-	"github.com/rubenv/sql-migrate"
+	migrate "github.com/rubenv/sql-migrate"
 )
 
 var (

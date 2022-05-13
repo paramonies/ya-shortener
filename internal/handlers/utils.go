@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"github.com/paramonies/internal/store"
 	"hash/fnv"
 	"sync"
+
+	"github.com/paramonies/internal/store"
 )
 
 func fanOut(inputCh chan Item, n int) []chan Item {

@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/paramonies/internal/store"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"sort"
+
+	"github.com/go-chi/chi/v5"
+
+	"github.com/paramonies/internal/store"
 )
 
 const workersCount = 10

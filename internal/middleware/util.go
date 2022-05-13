@@ -1,7 +1,9 @@
 package middleware
 
-import "crypto/rand"
-import "encoding/base64"
+import (
+	"crypto/rand"
+	"encoding/base64"
+)
 
 func generateToken(n int) (string, error) {
 	b := make([]byte, n)
