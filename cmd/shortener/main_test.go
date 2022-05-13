@@ -8,11 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/paramonies/internal/config"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/paramonies/internal/config"
 	"github.com/paramonies/internal/handlers"
 	"github.com/paramonies/internal/store"
 )
