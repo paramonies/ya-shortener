@@ -7,15 +7,6 @@ import (
 	"os"
 )
 
-type Repository interface {
-	Set(key, val, userID string) error
-	Get(key string) (string, error)
-	GetAllByID(id string) (map[string]string, error)
-	Delete(urlID, userID string) error
-	Ping() error
-	Close() error
-}
-
 type MapDB struct {
 	DB map[string]map[string]string
 }
