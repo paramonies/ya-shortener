@@ -1,42 +1,23 @@
 package main
 
 import (
-	"flag"
+	"github.com/paramonies/internal/config"
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/caarlos0/env/v6"
 	"github.com/go-chi/chi/v5"
 	"github.com/paramonies/internal/handlers"
 	"github.com/paramonies/internal/middleware"
 	"github.com/paramonies/internal/store"
 )
 
-type Config struct {
-	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
-	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
-	FileStorePath string `env:"FILE_STORAGE_PATH"`
-	//DatabaseDSN   string `env:"DATABASE_DSN" envDefault:"postgresql://postgres:123456@localhost:5432/shortener-api?connect_timeout=10&sslmode=disable"`
-	DatabaseDSN string `env:"DATABASE_DSN"`
-}
-
-var cfg Config
-
-func init() {
-	flag.StringVar(&cfg.SrvAddr, "a", cfg.SrvAddr, "server host and port")
-	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "URL for making http request")
-	flag.StringVar(&cfg.FileStorePath, "f", cfg.FileStorePath, "path to DB-file on disk")
-	flag.StringVar(&cfg.DatabaseDSN, "d", cfg.DatabaseDSN, "database dns")
-}
-
 func main() {
-	err := env.Parse(&cfg)
+	var cfg config.Config
+	err := cfg.Init()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	flag.Parse()
 
 	var db store.Repository
 	if cfg.DatabaseDSN != "" {
@@ -58,7 +39,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(db, &cfg)))
 }
 
-func NewRouter(db store.Repository, cfg *Config) *chi.Mux {
+func NewRouter(db store.Repository, cfg *config.Config) *chi.Mux {
 	log.Println("creating new chi-router")
 	r := chi.NewRouter()
 
