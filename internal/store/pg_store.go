@@ -160,13 +160,13 @@ SET deleted = true
 WHERE short = $1 and user_id = $2 and deleted= false
 `
 	rows, err := p.Conn.Query(ctx, query, urlID, userID)
-	defer rows.Close()
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return errors.New("record not found or already deleted")
 		}
 		return err
 	}
+	defer rows.Close()
 
 	return nil
 }
