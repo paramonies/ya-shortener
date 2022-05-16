@@ -134,9 +134,9 @@ FROM urls WHERE user_id=$1
 `
 	rows, err := p.Conn.Query(ctx, query, id)
 	if err != nil {
+		rows.Close()
 		return nil, err
 	}
-	defer rows.Close()
 
 	data := make(map[string]string)
 	var short, original string
@@ -160,6 +160,7 @@ SET deleted = true
 WHERE short = $1 and user_id = $2 and deleted= false
 `
 	rows, err := p.Conn.Query(ctx, query, urlID, userID)
+	defer rows.Close()
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return errors.New("record not found or already deleted")
@@ -167,7 +168,6 @@ WHERE short = $1 and user_id = $2 and deleted= false
 		return err
 	}
 
-	defer rows.Close()
 	return nil
 }
 

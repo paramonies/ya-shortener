@@ -23,7 +23,7 @@ func (cfg *Config) Init() error {
 	flag.StringVar(&cfg.SrvAddr, "a", cfg.SrvAddr, "server host and port")
 	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "URL for making http request")
 	flag.StringVar(&cfg.FileStorePath, "f", cfg.FileStorePath, "path to DB-file on disk")
-	flag.StringVar(&cfg.DatabaseDSN, "d", cfg.DatabaseDSN, "database dns")
+	flag.StringVar(&cfg.DatabaseDSN, "d", cfg.DatabaseDSN, "database dsn")
 
 	flag.Parse()
 

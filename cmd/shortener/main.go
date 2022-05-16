@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/go-chi/chi/v5"
 
@@ -24,7 +23,7 @@ func main() {
 	if cfg.DatabaseDSN != "" {
 		db, err = store.NewPostgresDB(cfg.DatabaseDSN)
 		if err != nil {
-			os.Exit(1)
+			log.Fatal(err)
 		}
 	} else if cfg.FileStorePath != "" {
 		db, err = store.NewFileDB(cfg.FileStorePath)
@@ -47,12 +46,12 @@ func NewRouter(db store.Repository, cfg *config.Config) *chi.Mux {
 	r.Use(middleware.GzipDECompressHandler, middleware.GzipCompressHandler)
 	r.Use(middleware.CookieMiddleware)
 
-	r.Post("/", handlers.CreateShortURLHadler(db, cfg.BaseURL))
-	r.Post("/api/shorten", handlers.CreateShortURLFromJSONHandler(db, cfg.BaseURL))
-	r.Get("/{ID}", handlers.GetURLByIDHandler(db))
-	r.Get("/api/user/urls", handlers.GetListByUserIDHandler(db, cfg.BaseURL))
-	r.Get("/ping", handlers.PingHandler(db))
-	r.Post("/api/shorten/batch", handlers.CreateManyShortURLHadler(db, cfg.BaseURL))
-	r.Delete("/api/user/urls", handlers.DeleteManyShortURLHadler(db))
+	r.Post("/", handlers.CreateShortURL(db, cfg.BaseURL))
+	r.Post("/api/shorten", handlers.CreateShortURLFromJSON(db, cfg.BaseURL))
+	r.Post("/api/shorten/batch", handlers.CreateManyShortURL(db, cfg.BaseURL))
+	r.Get("/{ID}", handlers.GetURLByID(db))
+	r.Get("/api/user/urls", handlers.GetListByUserID(db, cfg.BaseURL))
+	r.Delete("/api/user/urls", handlers.DeleteManyShortURL(db))
+	r.Get("/ping", handlers.Ping(db))
 	return r
 }

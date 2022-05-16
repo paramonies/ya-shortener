@@ -13,13 +13,13 @@ type Record struct {
 	UserID string `json:"user_id"`
 }
 
-type Records struct {
+type RecordsCache struct {
 	Records []Record `json:"records"`
 }
 
 type FileDB struct {
 	DB    *os.File
-	Cache Records
+	Cache RecordsCache
 }
 
 func NewFileDB(path string) (*FileDB, error) {
@@ -28,7 +28,7 @@ func NewFileDB(path string) (*FileDB, error) {
 		return nil, err
 	}
 
-	var records Records
+	var records RecordsCache
 
 	fileInfo, err := file.Stat()
 	if err != nil {
@@ -47,7 +47,7 @@ func NewFileDB(path string) (*FileDB, error) {
 		}
 	}
 
-	return &FileDB{DB: file, Cache: Records{records.Records}}, nil
+	return &FileDB{DB: file, Cache: RecordsCache{records.Records}}, nil
 }
 
 func (f *FileDB) Set(key, value, userID string) error {
