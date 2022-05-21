@@ -1,101 +1,57 @@
 package main
 
 import (
-	"fmt"
-	"hash/fnv"
-	"io"
 	"log"
 	"net/http"
-	"net/url"
 
 	"github.com/go-chi/chi/v5"
+
+	"github.com/paramonies/internal/config"
+	"github.com/paramonies/internal/handlers"
+	"github.com/paramonies/internal/middleware"
+	"github.com/paramonies/internal/store"
 )
 
-var srvAddr = "localhost:8080"
-
 func main() {
-	log.Fatal(http.ListenAndServe(srvAddr, NewRouter()))
+	var cfg config.Config
+	err := cfg.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var db store.Repository
+	if cfg.DatabaseDSN != "" {
+		db, err = store.NewPostgresDB(cfg.DatabaseDSN)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else if cfg.FileStorePath != "" {
+		db, err = store.NewFileDB(cfg.FileStorePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		db = store.NewMapDB()
+	}
+	defer db.Close()
+
+	log.Printf("starting server on %s...\n", cfg.SrvAddr)
+	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(db, &cfg)))
 }
 
-func NewRouter() *chi.Mux {
+func NewRouter(db store.Repository, cfg *config.Config) *chi.Mux {
+	log.Println("creating new chi-router")
 	r := chi.NewRouter()
-	db := NewDB()
-	r.Post("/", CreateShortURLHadler(db))
-	r.Get("/{ID}", GetURLByIDHandler(db))
+
+	r.Use(middleware.GzipDECompressHandler, middleware.GzipCompressHandler)
+	r.Use(middleware.CookieMiddleware)
+
+	r.Post("/", handlers.CreateShortURL(db, cfg.BaseURL))
+	r.Post("/api/shorten", handlers.CreateShortURLFromJSON(db, cfg.BaseURL))
+	r.Post("/api/shorten/batch", handlers.CreateManyShortURL(db, cfg.BaseURL))
+	r.Get("/{ID}", handlers.GetURLByID(db))
+	r.Get("/api/user/urls", handlers.GetListByUserID(db, cfg.BaseURL))
+	r.Delete("/api/user/urls", handlers.DeleteManyShortURL(db))
+	r.Get("/ping", handlers.Ping(db))
 	return r
-}
-
-func CreateShortURLHadler(rep Repository) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		b, err := io.ReadAll(r.Body)
-		defer r.Body.Close()
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		urlStr := string(b)
-		_, err = url.ParseRequestURI(urlStr)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		id := hash(urlStr)
-		rep.Set(fmt.Sprintf("%d", id), urlStr)
-
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.WriteHeader(http.StatusCreated)
-		shortURL := fmt.Sprintf("http://%s/%d", srvAddr, id)
-		w.Write([]byte(shortURL))
-	}
-}
-
-func GetURLByIDHandler(rep Repository) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "ID")
-
-		val, err := rep.Get(id)
-		if err != nil {
-			http.Error(w, "id not found", http.StatusBadRequest)
-			return
-		}
-
-		http.Redirect(w, r, val, http.StatusTemporaryRedirect)
-		w.Write([]byte("ID found"))
-	}
-}
-
-func hash(s string) uint32 {
-	h := fnv.New32a()
-	h.Write([]byte(s))
-	return h.Sum32()
-}
-
-type DB struct {
-	mapDB map[string]string
-}
-
-type Repository interface {
-	Set(key, val string)
-	Get(key string) (string, error)
-}
-
-func NewDB() *DB {
-	return &DB{
-		mapDB: make(map[string]string),
-	}
-}
-
-func (db *DB) Set(key, val string) {
-	db.mapDB[key] = val
-}
-
-func (db *DB) Get(key string) (string, error) {
-	val, ok := db.mapDB[key]
-	if !ok {
-		return "", fmt.Errorf("key %s not found in database", key)
-	}
-	return val, nil
 }
