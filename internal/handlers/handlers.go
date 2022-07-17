@@ -17,7 +17,16 @@ import (
 
 const workersCount = 10
 
-func CreateShortURL(rep store.Repository, baseURL string) http.HandlerFunc {
+type Handler struct {
+	rep store.Repository
+	url string
+}
+
+func New(rep store.Repository, url string) *Handler {
+	return &Handler{rep, url}
+}
+
+func (h *Handler) CreateShortURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("create short url from text/plain body")
 		log.Printf("request url: %s %s", r.Method, r.URL)
@@ -50,10 +59,10 @@ func CreateShortURL(rep store.Repository, baseURL string) http.HandlerFunc {
 		}
 		log.Printf("cookie: %s=%s", cookie.Name, cookie.Value)
 
-		shortURL := fmt.Sprintf("%s/%d", baseURL, id)
+		shortURL := fmt.Sprintf("%s/%d", h.url, id)
 		log.Printf("short url: %s", shortURL)
 
-		err = rep.Set(fmt.Sprintf("%d", id), urlStr, cookie.Value)
+		err = h.rep.Set(fmt.Sprintf("%d", id), urlStr, cookie.Value)
 		if err != nil {
 			log.Printf("error: %v", err)
 			if errors.Is(err, store.ErrConstraintViolation) {
@@ -77,7 +86,7 @@ func CreateShortURL(rep store.Repository, baseURL string) http.HandlerFunc {
 	}
 }
 
-func CreateShortURLFromJSON(rep store.Repository, baseURL string) http.HandlerFunc {
+func (h *Handler) CreateShortURLFromJSON() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("create short URL from JSON")
 		log.Printf("request url: %s %s", r.Method, r.URL)
@@ -120,10 +129,10 @@ func CreateShortURLFromJSON(rep store.Repository, baseURL string) http.HandlerFu
 		}
 		log.Printf("cookie: %s=%s", cookie.Name, cookie.Value)
 
-		shortURL := fmt.Sprintf("%s/%d", baseURL, id)
+		shortURL := fmt.Sprintf("%s/%d", h.url, id)
 		log.Printf("short url: %s", shortURL)
 
-		errSet := rep.Set(fmt.Sprintf("%d", id), URL, cookie.Value)
+		errSet := h.rep.Set(fmt.Sprintf("%d", id), URL, cookie.Value)
 
 		resBodyJSON := struct {
 			Result string `json:"result"`
@@ -160,7 +169,7 @@ func CreateShortURLFromJSON(rep store.Repository, baseURL string) http.HandlerFu
 	}
 }
 
-func CreateManyShortURL(rep store.Repository, baseURL string) http.HandlerFunc {
+func (h *Handler) CreateManyShortURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("create many short URLs from JSON")
 		log.Printf("request url: %s %s", r.Method, r.URL)
@@ -210,13 +219,13 @@ func CreateManyShortURL(rep store.Repository, baseURL string) http.HandlerFunc {
 
 			id := Hash(URL)
 			log.Printf("\thash %d for URL %s", id, URL)
-			err := rep.Set(fmt.Sprintf("%d", id), URL, cookie.Value)
+			err := h.rep.Set(fmt.Sprintf("%d", id), URL, cookie.Value)
 			if err != nil {
 				log.Printf("error: %v", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			shortURL := fmt.Sprintf("%s/%d", baseURL, id)
+			shortURL := fmt.Sprintf("%s/%d", h.url, id)
 			data[row.CorrelationID] = shortURL
 
 			log.Printf("\tshort url %s for original %s saved in repository", shortURL, URL)
@@ -255,13 +264,13 @@ func CreateManyShortURL(rep store.Repository, baseURL string) http.HandlerFunc {
 	}
 }
 
-func GetURLByID(rep store.Repository) http.HandlerFunc {
+func (h *Handler) GetURLByID() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("get original URL by short ID")
 		id := chi.URLParam(r, "ID")
 		log.Printf("request url: %s %s", r.Method, r.URL)
 
-		val, err := rep.Get(id)
+		val, err := h.rep.Get(id)
 		if err != nil {
 			log.Printf("error: %v", err)
 
@@ -282,7 +291,7 @@ func GetURLByID(rep store.Repository) http.HandlerFunc {
 	}
 }
 
-func GetListByUserID(rep store.Repository, baseURL string) http.HandlerFunc {
+func (h *Handler) GetListByUserID() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("get list URLs for userID")
 		log.Printf("request url: %s %s", r.Method, r.URL)
@@ -296,7 +305,7 @@ func GetListByUserID(rep store.Repository, baseURL string) http.HandlerFunc {
 		log.Printf("cookie: %s=%s", cookie.Name, cookie.Value)
 
 		userID := cookie.Value
-		list, err := rep.GetAllByID(userID)
+		list, err := h.rep.GetAllByID(userID)
 
 		if err != nil {
 			log.Printf("error: %v", err)
@@ -328,7 +337,7 @@ func GetListByUserID(rep store.Repository, baseURL string) http.HandlerFunc {
 
 		for _, k := range keys {
 			val := list[k]
-			shortURL := fmt.Sprintf("%s/%s", baseURL, k)
+			shortURL := fmt.Sprintf("%s/%s", h.url, k)
 			listURL = append(listURL, data{ShortURL: shortURL, OrigURL: val})
 			log.Printf("\t %s %s", shortURL, val)
 		}
@@ -349,12 +358,12 @@ func GetListByUserID(rep store.Repository, baseURL string) http.HandlerFunc {
 	}
 }
 
-func Ping(rep store.Repository) http.HandlerFunc {
+func (h *Handler) Ping() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("ping database")
 		log.Printf("request url: %s %s", r.Method, r.URL)
 
-		err := rep.Ping()
+		err := h.rep.Ping()
 		if err != nil {
 			log.Printf("error: %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -378,7 +387,7 @@ type ErrorItem struct {
 	Err error
 }
 
-func DeleteManyShortURL(rep store.Repository) http.HandlerFunc {
+func (h *Handler) DeleteManyShortURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("delete many short URLs")
 		log.Printf("request url: %s %s", r.Method, r.URL)
@@ -410,7 +419,7 @@ func DeleteManyShortURL(rep store.Repository) http.HandlerFunc {
 		}
 		log.Printf("cookie: %s=%s", cookie.Name, cookie.Value)
 
-		go execDelete(ids, cookie.Value, rep)
+		go execDelete(ids, cookie.Value, h.rep)
 
 		resBody := "urls deleted"
 
