@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -13,7 +14,7 @@ import (
 
 	"github.com/paramonies/internal/config"
 	"github.com/paramonies/internal/handlers"
-	"github.com/paramonies/internal/store"
+	"github.com/paramonies/internal/routes"
 )
 
 func TestMux(t *testing.T) {
@@ -130,8 +131,15 @@ func TestMux(t *testing.T) {
 		BaseURL: "http://localhost:8080",
 	}
 
-	r := NewRouter(store.NewMapDB(), &cfg)
-	ts := httptest.NewServer(r)
+	r, err := config.NewRepository(&cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer r.Close()
+	h := handlers.New(r, cfg.BaseURL)
+
+	rtr := routes.New(h)
+	ts := httptest.NewServer(rtr)
 	defer ts.Close()
 
 	for _, tt := range tests {

@@ -17,3 +17,19 @@ env_up:
 .PHONY: env_down
 env_down:
 	docker-compose down -v --rmi local --remove-orphans
+
+.PHONY: save_mem_profile
+save_mem_profile:
+	curl -sK -v http://localhost:8080/debug/pprof/heap > profiles/base.pprof
+
+.PHONY: display_mem_profile
+display_mem_profile:
+	go tool pprof -http=":9090" -seconds=30 profiles/base.pprof
+
+.PHONY: show_diff_mem
+show_diff_mem:
+	go tool pprof -top -diff_base=profiles/base.pprof profiles/result.pprof
+
+#go test -bench=. -memprofile=profiles/result.pprof ./internal/handlers/handlers_test.go
+
+
