@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -19,6 +20,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	fmt.Println("hello")
 	var db store.Repository
 	if cfg.DatabaseDSN != "" {
 		db, err = store.NewPostgresDB(cfg.DatabaseDSN)
