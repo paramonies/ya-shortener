@@ -30,6 +30,9 @@ display_mem_profile:
 show_diff_mem:
 	go tool pprof -top -diff_base=profiles/base.pprof profiles/result.pprof
 
-#go test -bench=. -memprofile=profiles/result.pprof ./internal/handlers/handlers_test.go
+#go tool pprof -http=":9090" -seconds=30 http://localhost:8080/debug/pprof/heap
+#make request POST http://localhost:8080/
+#curl -sK -v http://localhost:8080/debug/pprof/heap > profiles/base.pprof
+
 
 
