@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"github.com/paramonies/internal/store"
 
 	"github.com/caarlos0/env/v6"
 )
@@ -28,4 +29,23 @@ func (cfg *Config) Init() error {
 	flag.Parse()
 
 	return nil
+}
+
+func NewRepository(cfg *Config) (store.Repository, error) {
+	var db store.Repository
+	var err error
+	if cfg.DatabaseDSN != "" {
+		db, err = store.NewPostgresDB(cfg.DatabaseDSN)
+		if err != nil {
+			return nil, err
+		}
+	} else if cfg.FileStorePath != "" {
+		db, err = store.NewFileDB(cfg.FileStorePath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	db = store.NewMapDB()
+	return db, nil
 }

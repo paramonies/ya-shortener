@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -20,25 +19,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("hello")
-	var db store.Repository
-	if cfg.DatabaseDSN != "" {
-		db, err = store.NewPostgresDB(cfg.DatabaseDSN)
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else if cfg.FileStorePath != "" {
-		db, err = store.NewFileDB(cfg.FileStorePath)
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		db = store.NewMapDB()
+	r, err := config.NewRepository(&cfg)
+	if err != nil {
+		log.Fatal(err)
 	}
-	defer db.Close()
+	defer r.Close()
 
 	log.Printf("starting server on %s...\n", cfg.SrvAddr)
-	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(db, &cfg)))
+	log.Fatal(http.ListenAndServe(cfg.SrvAddr, NewRouter(r, &cfg)))
 }
 
 func NewRouter(db store.Repository, cfg *config.Config) *chi.Mux {
