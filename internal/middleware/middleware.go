@@ -1,3 +1,4 @@
+// Package middleware define middlewart for incoming request.
 package middleware
 
 import (
@@ -9,6 +10,7 @@ import (
 	"strings"
 )
 
+// GzipWriter difine custom Writer.
 type GzipWriter struct {
 	http.ResponseWriter
 	Writer io.Writer
@@ -69,6 +71,7 @@ func GzipDECompressHandler(next http.Handler) http.Handler {
 	})
 }
 
+// CookieMiddleware define user_id in cookie.
 func CookieMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := r.Cookie("user_id")

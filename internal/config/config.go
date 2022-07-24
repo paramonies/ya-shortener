@@ -1,3 +1,4 @@
+// Package config implement functions for environment and project configs.
 package config
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/paramonies/internal/store"
 )
 
+// Config contains all config variables for application.
 type Config struct {
 	SrvAddr       string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
 	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
@@ -16,6 +18,7 @@ type Config struct {
 	DatabaseDSN string `env:"DATABASE_DSN"`
 }
 
+// Init define Config variables from env variables or command args.
 func (cfg *Config) Init() error {
 	err := env.Parse(cfg)
 	if err != nil {
@@ -32,6 +35,7 @@ func (cfg *Config) Init() error {
 	return nil
 }
 
+// NewRepository create new repository.
 func NewRepository(cfg *Config) (store.Repository, error) {
 	var db store.Repository
 	var err error

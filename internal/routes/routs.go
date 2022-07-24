@@ -1,3 +1,4 @@
+// Package routes difines routes for user request and pprof.
 package routes
 
 import (
