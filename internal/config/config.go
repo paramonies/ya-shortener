@@ -45,8 +45,9 @@ func NewRepository(cfg *Config) (store.Repository, error) {
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		db = store.NewMapDB()
 	}
 
-	db = store.NewMapDB()
 	return db, nil
 }
