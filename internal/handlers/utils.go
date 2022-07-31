@@ -7,15 +7,15 @@ import (
 	"github.com/paramonies/internal/store"
 )
 
-func fanOut(inputCh chan Item, n int) []chan Item {
-	chs := make([]chan Item, 0, n)
+func fanOut(inputCh chan item, n int) []chan item {
+	chs := make([]chan item, 0, n)
 	for i := 0; i < n; i++ {
-		ch := make(chan Item)
+		ch := make(chan item)
 		chs = append(chs, ch)
 	}
 
 	go func() {
-		defer func(chs []chan Item) {
+		defer func(chs []chan item) {
 			for _, ch := range chs {
 				close(ch)
 			}
@@ -40,13 +40,13 @@ func fanOut(inputCh chan Item, n int) []chan Item {
 	return chs
 }
 
-func newWorker(inputCh <-chan Item, rep store.Repository) chan ErrorItem {
-	outCh := make(chan ErrorItem)
+func newWorker(inputCh <-chan item, rep store.Repository) chan errorItem {
+	outCh := make(chan errorItem)
 
 	go func() {
 		for item := range inputCh {
 			err := rep.Delete(item.URLID, item.UserID)
-			outCh <- ErrorItem{Item: item, Err: err}
+			outCh <- errorItem{item: item, Err: err}
 		}
 		close(outCh)
 	}()
@@ -54,8 +54,8 @@ func newWorker(inputCh <-chan Item, rep store.Repository) chan ErrorItem {
 	return outCh
 }
 
-func fanIn(inputChs ...chan ErrorItem) chan ErrorItem {
-	outCh := make(chan ErrorItem)
+func fanIn(inputChs ...chan errorItem) chan errorItem {
+	outCh := make(chan errorItem)
 
 	go func() {
 		var wg sync.WaitGroup
@@ -63,7 +63,7 @@ func fanIn(inputChs ...chan ErrorItem) chan ErrorItem {
 		for _, inputCh := range inputChs {
 			wg.Add(1)
 
-			go func(inputCh chan ErrorItem) {
+			go func(inputCh chan errorItem) {
 				defer wg.Done()
 				for item := range inputCh {
 					outCh <- item

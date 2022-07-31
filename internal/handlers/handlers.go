@@ -1,3 +1,4 @@
+// Package handlers defines handlers for routes.
 package handlers
 
 import (
@@ -17,15 +18,18 @@ import (
 
 const workersCount = 10
 
+// Handler contains common info for handler methods.
 type Handler struct {
 	rep store.Repository
 	url string
 }
 
+// New create new Handler.
 func New(rep store.Repository, url string) *Handler {
 	return &Handler{rep, url}
 }
 
+// CreateShortURL create short URL for Post text/plain
 func (h *Handler) CreateShortURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("create short url from text/plain body")
@@ -86,6 +90,7 @@ func (h *Handler) CreateShortURL() http.HandlerFunc {
 	}
 }
 
+// CreateShortURLFromJSON create short URL for Post JSON request.
 func (h *Handler) CreateShortURLFromJSON() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("create short URL from JSON")
@@ -169,6 +174,7 @@ func (h *Handler) CreateShortURLFromJSON() http.HandlerFunc {
 	}
 }
 
+// CreateManyShortURL create many URL for POST request with many json records.
 func (h *Handler) CreateManyShortURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("create many short URLs from JSON")
@@ -264,6 +270,7 @@ func (h *Handler) CreateManyShortURL() http.HandlerFunc {
 	}
 }
 
+// GetURLByID get original URL by ID.
 func (h *Handler) GetURLByID() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("get original URL by short ID")
@@ -291,6 +298,7 @@ func (h *Handler) GetURLByID() http.HandlerFunc {
 	}
 }
 
+// GetListByUserID get all saved URLs for user ID.
 func (h *Handler) GetListByUserID() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("get list URLs for userID")
@@ -358,6 +366,7 @@ func (h *Handler) GetListByUserID() http.HandlerFunc {
 	}
 }
 
+// Ping verify service work.
 func (h *Handler) Ping() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("ping database")
@@ -377,16 +386,17 @@ func (h *Handler) Ping() http.HandlerFunc {
 	}
 }
 
-type Item struct {
+type item struct {
 	URLID  string
 	UserID string
 }
 
-type ErrorItem struct {
-	Item
+type errorItem struct {
+	item
 	Err error
 }
 
+// DeleteManyShortURL delete many short URLs for User by IDs.
 func (h *Handler) DeleteManyShortURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("delete many short URLs")
@@ -433,18 +443,18 @@ func (h *Handler) DeleteManyShortURL() http.HandlerFunc {
 
 func execDelete(ids []string, userID string, rep store.Repository) {
 	log.Println("async deleting many short URLs")
-	inputCh := make(chan Item)
+	inputCh := make(chan item)
 
 	go func() {
 		for _, id := range ids {
-			inputCh <- Item{URLID: id, UserID: userID}
+			inputCh <- item{URLID: id, UserID: userID}
 		}
 		close(inputCh)
 	}()
 
 	fanOutChs := fanOut(inputCh, workersCount)
 
-	workerChs := make([]chan ErrorItem, 0, workersCount)
+	workerChs := make([]chan errorItem, 0, workersCount)
 	for _, fanOutCh := range fanOutChs {
 		workerCh := newWorker(fanOutCh, rep)
 		workerChs = append(workerChs, workerCh)

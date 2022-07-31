@@ -1,3 +1,4 @@
+// Package store define repository interface.
 package store
 
 type Repository interface {
