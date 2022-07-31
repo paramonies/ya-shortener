@@ -17,3 +17,11 @@ env_up:
 .PHONY: env_down
 env_down:
 	docker-compose down -v --rmi local --remove-orphans
+
+
+#curl -sK -v  http://localhost:8080/debug/pprof/heap > ./profiles/result.pprof
+#go tool pprof -top -diff_base=profiles/base.pprof profiles/result.pprof
+
+
+
+

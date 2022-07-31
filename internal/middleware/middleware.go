@@ -74,7 +74,7 @@ func CookieMiddleware(next http.Handler) http.Handler {
 		_, err := r.Cookie("user_id")
 
 		if errors.Is(err, http.ErrNoCookie) {
-			userID, err := generateToken(10)
+			userID, err := GenerateToken(10)
 			if err != nil {
 				log.Println("failed to generate token for \"user_id\" cookie: ", err)
 			} else {
