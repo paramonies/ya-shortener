@@ -2,6 +2,14 @@
 run:
 	go run cmd/shortener/main.go
 
+.PHONY: buildlint
+buildlint:
+	go build -o ./cmd/staticlint/main ./cmd/staticlint/main.go
+
+.PHONY: startlint
+startlint:
+	./cmd/staticlint/main ./...
+
 .PHONY: fmt
 fmt:
 	goimports -local "github.com/paramonies" -w .

@@ -1,12 +1,11 @@
 package main
 
 import (
-	"log"
-	"net/http"
-
 	"github.com/paramonies/internal/config"
 	"github.com/paramonies/internal/handlers"
 	"github.com/paramonies/internal/routes"
+	"log"
+	"net/http"
 )
 
 func main() {
