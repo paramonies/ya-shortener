@@ -1,6 +1,14 @@
 .PHONY: run
 run:
-	go run cmd/shortener/main.go
+	go run -ldflags="-X 'main.buildVersion=v1.0.1' -X 'main.buildDate=$(date +'%Y/%m/%d %H:%M:%S')' -X 'main.buildCommit=$(git show -s --format=%s)'" cmd/shortener/main.go
+
+.PHONY: buildlint
+buildlint:
+	go build -o ./cmd/staticlint/main ./cmd/staticlint/main.go
+
+.PHONY: startlint
+startlint:
+	./cmd/staticlint/main ./...
 
 .PHONY: fmt
 fmt:
