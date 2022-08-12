@@ -16,6 +16,7 @@ type Config struct {
 	FileStorePath string `env:"FILE_STORAGE_PATH"`
 	//DatabaseDSN   string `env:"DATABASE_DSN" envDefault:"postgresql://postgres:123456@localhost:5432/shortener-api?connect_timeout=10&sslmode=disable"`
 	DatabaseDSN string `env:"DATABASE_DSN"`
+	EnableHTTPS bool   `env:"ENABLE_HTTPS" envDefault:"false"`
 }
 
 // Init define Config variables from env variables or command args.
@@ -29,6 +30,7 @@ func (cfg *Config) Init() error {
 	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "URL for making http request")
 	flag.StringVar(&cfg.FileStorePath, "f", cfg.FileStorePath, "path to DB-file on disk")
 	flag.StringVar(&cfg.DatabaseDSN, "d", cfg.DatabaseDSN, "database dsn")
+	cfg.EnableHTTPS = *flag.Bool("s", cfg.EnableHTTPS, "enable HTTPS")
 
 	flag.Parse()
 

@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/paramonies/internal/config"
 	"github.com/paramonies/internal/handlers"
 	"github.com/paramonies/internal/routes"
-	"log"
-	"net/http"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 var (
@@ -32,7 +34,23 @@ func main() {
 	h := handlers.New(r, cfg.BaseURL)
 
 	log.Printf("starting server on %s...\n", cfg.SrvAddr)
-	log.Fatal(http.ListenAndServe(cfg.SrvAddr, routes.New(h)))
+
+	if cfg.EnableHTTPS {
+		manager := &autocert.Manager{
+			Cache:  autocert.DirCache("certs"),
+			Prompt: autocert.AcceptTOS,
+		}
+		server := &http.Server{
+			Addr:      cfg.SrvAddr,
+			Handler:   routes.New(h),
+			TLSConfig: manager.TLSConfig(),
+		}
+		log.Printf("HTTPs enable")
+		log.Fatal(server.ListenAndServeTLS("", ""))
+	} else {
+		log.Fatal(http.ListenAndServe(cfg.SrvAddr, routes.New(h)))
+	}
+
 }
 
 func printBuildInfo() {
