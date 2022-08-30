@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"golang.org/x/crypto/acme/autocert"
 
@@ -34,6 +38,22 @@ func main() {
 	defer r.Close()
 	h := handlers.New(r, cfg.BaseURL)
 
+	//HTTP Server
+	server := &http.Server{
+		Addr:    cfg.SrvAddr,
+		Handler: routes.New(h),
+	}
+	idleConnsClosed := make(chan struct{})
+	sigint := make(chan os.Signal, 1)
+	signal.Notify(sigint, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	go func() {
+		<-sigint
+		if err := server.Shutdown(context.Background()); err != nil {
+			log.Printf("HTTP server Shutdown: %v", err)
+		}
+		close(idleConnsClosed)
+	}()
+
 	log.Printf("starting server on %s...\n", cfg.SrvAddr)
 
 	if *cfg.EnableHTTPS {
@@ -41,16 +61,21 @@ func main() {
 			Cache:  autocert.DirCache("certs"),
 			Prompt: autocert.AcceptTOS,
 		}
-		server := &http.Server{
-			Addr:      cfg.SrvAddr,
-			Handler:   routes.New(h),
-			TLSConfig: manager.TLSConfig(),
-		}
+		server.TLSConfig = manager.TLSConfig()
+
 		log.Printf("HTTPs enable")
-		log.Fatal(server.ListenAndServeTLS("", ""))
+		if err := server.ListenAndServeTLS("", ""); err != http.ErrServerClosed {
+			log.Fatalf("HTTPS server ListenAndServe: %v", err)
+		}
 	} else {
-		log.Fatal(http.ListenAndServe(cfg.SrvAddr, routes.New(h)))
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			log.Fatalf("HTTP server ListenAndServe: %v", err)
+		}
 	}
+
+	// ждём завершения процедуры graceful shutdown
+	<-idleConnsClosed
+	fmt.Println("Server Shutdown gracefully")
 
 }
 
