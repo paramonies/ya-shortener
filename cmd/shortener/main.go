@@ -5,10 +5,11 @@ import (
 	"log"
 	"net/http"
 
+	"golang.org/x/crypto/acme/autocert"
+
 	"github.com/paramonies/internal/config"
 	"github.com/paramonies/internal/handlers"
 	"github.com/paramonies/internal/routes"
-	"golang.org/x/crypto/acme/autocert"
 )
 
 var (
@@ -35,7 +36,7 @@ func main() {
 
 	log.Printf("starting server on %s...\n", cfg.SrvAddr)
 
-	if cfg.EnableHTTPS {
+	if *cfg.EnableHTTPS {
 		manager := &autocert.Manager{
 			Cache:  autocert.DirCache("certs"),
 			Prompt: autocert.AcceptTOS,
