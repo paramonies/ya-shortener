@@ -127,8 +127,9 @@ func TestMux(t *testing.T) {
 	}
 
 	cfg := config.Config{
-		SrvAddr: "localhost:8080",
-		BaseURL: "http://localhost:8080",
+		SrvAddr:       "localhost:8080",
+		BaseURL:       "http://localhost:8080",
+		TrustedSubnet: "192.168.0.1/24",
 	}
 
 	r, err := config.NewRepository(&cfg)
@@ -136,7 +137,7 @@ func TestMux(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer r.Close()
-	h := handlers.New(r, cfg.BaseURL)
+	h := handlers.New(r, cfg.BaseURL, cfg.TrustedSubnet)
 
 	rtr := routes.New(h)
 	ts := httptest.NewServer(rtr)
