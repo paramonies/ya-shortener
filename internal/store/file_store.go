@@ -92,6 +92,17 @@ func (f *FileDB) GetAllByID(id string) (map[string]string, error) {
 	return data, nil
 }
 
+func (f *FileDB) GetStats() (Stats, error) {
+	users := make(map[string]struct{})
+	for _, r := range f.Cache.Records {
+		if _, ok := users[r.UserID]; !ok {
+			users[r.UserID] = struct{}{}
+		}
+	}
+
+	return Stats{len(f.Cache.Records), len(f.Cache.Records)}, nil
+}
+
 func (f *FileDB) Delete(urlID, userID string) error {
 	return nil
 }

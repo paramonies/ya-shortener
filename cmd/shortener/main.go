@@ -36,7 +36,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer r.Close()
-	h := handlers.New(r, cfg.BaseURL)
+	h := handlers.New(r, cfg.BaseURL, cfg.TrustedSubnet)
 
 	//HTTP Server
 	server := &http.Server{

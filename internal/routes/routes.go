@@ -26,6 +26,7 @@ func New(h *handlers.Handler) *chi.Mux {
 	r.Get("/api/user/urls", h.GetListByUserID())
 	r.Delete("/api/user/urls", h.DeleteManyShortURL())
 	r.Get("/ping", h.Ping())
+	r.Get("/api/internal/stats", h.GetStats())
 
 	r.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
 	r.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
