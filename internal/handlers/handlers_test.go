@@ -21,8 +21,9 @@ func BenchmarkCreateShortURL(b *testing.B) {
 	w := httptest.NewRecorder()
 	rtr := chi.NewRouter()
 	cfg := config.Config{
-		SrvAddr: "localhost:8080",
-		BaseURL: "http://localhost:8080",
+		SrvAddr:       "localhost:8080",
+		BaseURL:       "http://localhost:8080",
+		TrustedSubnet: "192.168.0.1/24",
 	}
 
 	rep, err := config.NewRepository(&cfg)
@@ -30,7 +31,7 @@ func BenchmarkCreateShortURL(b *testing.B) {
 		log.Fatal(err)
 	}
 	defer rep.Close()
-	h := New(rep, cfg.BaseURL)
+	h := New(rep, cfg.BaseURL, cfg.TrustedSubnet)
 
 	userID, _ := middleware.GenerateToken(10)
 	cookie := &http.Cookie{
@@ -62,8 +63,9 @@ func BenchmarkHandler_GetURLByID(b *testing.B) {
 	w := httptest.NewRecorder()
 	rtr := chi.NewRouter()
 	cfg := config.Config{
-		SrvAddr: "localhost:8080",
-		BaseURL: "http://localhost:8080",
+		SrvAddr:       "localhost:8080",
+		BaseURL:       "http://localhost:8080",
+		TrustedSubnet: "192.168.0.1/24",
 	}
 
 	rep, err := config.NewRepository(&cfg)
@@ -71,7 +73,7 @@ func BenchmarkHandler_GetURLByID(b *testing.B) {
 		log.Fatal(err)
 	}
 	defer rep.Close()
-	h := New(rep, cfg.BaseURL)
+	h := New(rep, cfg.BaseURL, cfg.TrustedSubnet)
 
 	userID, _ := middleware.GenerateToken(10)
 	cookie := &http.Cookie{
@@ -115,8 +117,9 @@ func BenchmarkHandler_GetListByUserID(b *testing.B) {
 	w := httptest.NewRecorder()
 	rtr := chi.NewRouter()
 	cfg := config.Config{
-		SrvAddr: "localhost:8080",
-		BaseURL: "http://localhost:8080",
+		SrvAddr:       "localhost:8080",
+		BaseURL:       "http://localhost:8080",
+		TrustedSubnet: "192.168.0.1/24",
 	}
 
 	rep, err := config.NewRepository(&cfg)
@@ -124,7 +127,7 @@ func BenchmarkHandler_GetListByUserID(b *testing.B) {
 		log.Fatal(err)
 	}
 	defer rep.Close()
-	h := New(rep, cfg.BaseURL)
+	h := New(rep, cfg.BaseURL, cfg.TrustedSubnet)
 
 	userID, _ := middleware.GenerateToken(10)
 	cookie := &http.Cookie{
@@ -166,8 +169,9 @@ func BenchmarkHandler_CreateShortURLFromJSON(b *testing.B) {
 	w := httptest.NewRecorder()
 	rtr := chi.NewRouter()
 	cfg := config.Config{
-		SrvAddr: "localhost:8080",
-		BaseURL: "http://localhost:8080",
+		SrvAddr:       "localhost:8080",
+		BaseURL:       "http://localhost:8080",
+		TrustedSubnet: "192.168.0.1/24",
 	}
 
 	rep, err := config.NewRepository(&cfg)
@@ -175,7 +179,7 @@ func BenchmarkHandler_CreateShortURLFromJSON(b *testing.B) {
 		log.Fatal(err)
 	}
 	defer rep.Close()
-	h := New(rep, cfg.BaseURL)
+	h := New(rep, cfg.BaseURL, cfg.TrustedSubnet)
 
 	userID, _ := middleware.GenerateToken(10)
 	cookie := &http.Cookie{
