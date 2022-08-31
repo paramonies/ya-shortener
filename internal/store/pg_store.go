@@ -175,6 +175,22 @@ func (p *PostgresDB) Ping() error {
 	return p.Conn.Ping(context.Background())
 }
 
+func (p *PostgresDB) GetStats() (Stats, error) {
+	stats := Stats{}
+	ctx, cancel := context.WithTimeout(context.Background(), DBConnectTimeout)
+	defer cancel()
+
+	query := `
+SELECT url_info.url_count, user_info.user_count
+FROM 
+(SELECT COUNT(*) AS url_count FROM urls WHERE deleted IS NULL) as url_info,
+(SELECT COUNT(DISTINCT user_id) AS user_count FROM urls WHERE deleted IS NULL) as user_info
+`
+
+	err := p.Conn.QueryRow(ctx, query).Scan(&stats.URLNumber, &stats.UserNumber)
+	return stats, err
+}
+
 func (p *PostgresDB) Close() error {
 	p.Conn.Close()
 	return nil

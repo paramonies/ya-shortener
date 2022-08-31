@@ -2,6 +2,9 @@ package handlers
 
 import (
 	"hash/fnv"
+	"log"
+	"net"
+	"strings"
 	"sync"
 
 	"github.com/paramonies/internal/store"
@@ -82,4 +85,16 @@ func Hash(s string) uint32 {
 	h := fnv.New32a()
 	h.Write([]byte(s))
 	return h.Sum32()
+}
+
+func SetTrustedNetwork(network string) *net.IPNet {
+	if strings.TrimSpace(network) == "" {
+		return nil
+	}
+	_, trustedNetwork, err := net.ParseCIDR(network)
+	if err != nil {
+		trustedNetwork = nil
+		log.Printf("failed to get IPNet from string %s: %v", network, err)
+	}
+	return trustedNetwork
 }

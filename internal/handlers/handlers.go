@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"sort"
@@ -20,13 +21,13 @@ const workersCount = 10
 
 // Handler contains common info for handler methods.
 type Handler struct {
-	rep store.Repository
-	url string
+	rep            store.Repository
+	url            string
+	trustedNetwork *net.IPNet
 }
 
-// New create new Handler.
-func New(rep store.Repository, url string) *Handler {
-	return &Handler{rep, url}
+func New(rep store.Repository, url, trustedNetwork string) *Handler {
+	return &Handler{rep, url, SetTrustedNetwork(trustedNetwork)}
 }
 
 // CreateShortURL create short URL for Post text/plain
@@ -383,6 +384,35 @@ func (h *Handler) Ping() http.HandlerFunc {
 		w.Write([]byte("OK"))
 
 		log.Println("database is connected")
+	}
+}
+
+// GetStats return internal stats about count of shorted url and users in Service
+func (h *Handler) GetStats() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if h.trustedNetwork == nil || !h.trustedNetwork.Contains(net.ParseIP(r.Header.Get("X-Real-IP"))) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		stats, err := h.rep.GetStats()
+		if err != nil {
+			log.Printf("error: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		statsB, err := json.Marshal(stats)
+		if err != nil {
+			log.Printf("error: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(statsB)
+		log.Printf("internal stats for ip %s: URL count - %d, user count - %d", h.trustedNetwork, stats.URLNumber, stats.UserNumber)
 	}
 }
 

@@ -22,6 +22,7 @@ type Config struct {
 	DatabaseDSN    string `env:"DATABASE_DSN"`
 	EnableHTTPS    *bool  `env:"ENABLE_HTTPS" envDefault:"false"`
 	ConfigFileName string `env:"CONFIG"`
+	TrustedSubnet  string `env:"TRUSTED_SUBNET"`
 }
 
 // JSONConfig for json config
@@ -31,6 +32,7 @@ type JSONConfig struct {
 	FileStorePath string `json:"file_storage_path"`
 	DatabaseDSN   string `json:"database_dsn"`
 	EnableHTTPS   bool   `json:"enable_https"`
+	TrustedSubnet string `json:"trusted_subnet"`
 }
 
 // Init define Config variables from env variables or command args.
@@ -47,6 +49,7 @@ func (cfg *Config) Init() error {
 	cfg.EnableHTTPS = flag.Bool("s", *cfg.EnableHTTPS, "enable HTTPS")
 	flag.StringVar(&cfg.ConfigFileName, "c", cfg.ConfigFileName, "config file name")
 	flag.StringVar(&cfg.ConfigFileName, "config", cfg.ConfigFileName, "config file name")
+	flag.StringVar(&cfg.TrustedSubnet, "t", cfg.TrustedSubnet, "trusted subnet for /api/internal/stats endpoint")
 
 	flag.Parse()
 
@@ -76,18 +79,24 @@ func (cfg *Config) Init() error {
 	if cfg.BaseURL == "" {
 		cfg.BaseURL = config.BaseURL
 	}
+
 	if cfg.FileStorePath == "" {
 		if _, err := os.Stat(config.FileStorePath); !errors.Is(err, os.ErrNotExist) {
 			cfg.FileStorePath = config.FileStorePath
 		}
 	}
+
 	if cfg.DatabaseDSN == "" {
 		cfg.DatabaseDSN = config.DatabaseDSN
 	}
+
 	if cfg.EnableHTTPS != nil {
 		cfg.EnableHTTPS = &config.EnableHTTPS
 	}
 
+	if cfg.TrustedSubnet == "" {
+		cfg.TrustedSubnet = config.TrustedSubnet
+	}
 	return nil
 }
 
